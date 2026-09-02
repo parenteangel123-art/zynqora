@@ -1,0 +1,22 @@
+# secretos — NUNCA subir
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# supabase
+supabase/.branches
+supabase/.temp
+supabase/.env
+
+# dependencias / build
+node_modules/
+dist/
+.expo/
+web-build/
+
+# sistema
+.DS_Store
+Thumbs.db
+*.log

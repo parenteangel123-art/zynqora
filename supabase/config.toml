@@ -1,0 +1,95 @@
+# Zynqora — configuración local de Supabase CLI
+# Docs: https://supabase.com/docs/guides/cli/config
+#
+# Este archivo solo lo usa la CLI de Supabase (`supabase start`, `supabase db push`,
+# `supabase functions deploy`). No contiene ningún secreto.
+
+project_id = "zynqora"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+# Límite por archivo. El plan Free de la app rechaza antes en el backend según ai_usage.
+file_size_limit = "25MiB"
+
+[storage.buckets.documents]
+public = false
+file_size_limit = "25MiB"
+allowed_mime_types = [
+  "application/pdf",
+  "text/plain",
+  "text/markdown",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/png",
+  "image/jpeg",
+  "image/webp"
+]
+
+[storage.buckets.avatars]
+public = true
+file_size_limit = "2MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/webp"]
+
+[auth]
+enabled = true
+site_url = "http://localhost:8081"
+# Añade aquí la URL pública de tu app cuando la despliegues (Vercel / Cloudflare Pages).
+additional_redirect_urls = ["http://localhost:8081", "https://localhost:8081"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false   # ponlo en true en producción (requiere SMTP configurado)
+double_confirm_changes = true
+secure_password_change = false
+
+# OAuth opcional — rellena client_id / secret y pon enabled = true cuando los tengas.
+[auth.external.google]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.apple]
+enabled = false
+client_id = ""
+secret = ""
+
+[edge_runtime]
+enabled = true
+# "per_worker" recarga en cada request en local (útil para desarrollar las funciones).
+policy = "oneshot"
+inspector_port = 8083
+
+[functions.zynqora-ai]
+verify_jwt = true
+
+[functions.ingest]
+verify_jwt = true
+
+[analytics]
+enabled = false

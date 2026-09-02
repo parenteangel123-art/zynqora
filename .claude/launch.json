@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "zynqora-static",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\angel\\AppData\\Local\\Temp\\claude\\C--Users-angel-Desktop-Zynqora\\79732663-724a-46b3-8968-4c67020b6cea\\scratchpad\\serve.ps1"],
+      "port": 8791
+    }
+  ]
+}
