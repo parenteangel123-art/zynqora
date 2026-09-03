@@ -22,3 +22,7 @@ Thumbs.db
 *.log
 
 .wrangler/
+push_to_github.bat
+push_log.txt
+fix_and_push.bat
+fix_log.txt
