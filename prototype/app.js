@@ -1992,6 +1992,61 @@
   function docById(id) { return (DB.documents || []).filter(function (d) { return d.id === id; })[0] || null; }
   function docsOfSubject(sid) { return (DB.documents || []).filter(function (d) { return d.subjectId === sid; }); }
   function docHasText(d) { return !!(d && d.text && d.text.replace(/\s/g, "").length > 40); }
+  // Documentos REALES de una materia: subidos por el usuario y con texto
+  // aprovechable (nunca los "seeded" de ejemplo). Es la base de todo lo que
+  // decide si una materia ya tiene contenido propio o no.
+  function subjectRealDocs(sid) { return docsOfSubject(sid).filter(function (d) { return docHasText(d) && !d.seeded && d.status === "analyzed"; }); }
+  function subjectHasRealContent(sid) { return subjectRealDocs(sid).length > 0; }
+  // El documento real más reciente de la materia (para generar tarjetas/test
+  // "rápidos" desde el botón general de la materia, sin tener que elegir).
+  function primaryRealDoc(sid) {
+    var docs = subjectRealDocs(sid);
+    if (!docs.length) return null;
+    docs.sort(function (a, b) { return (b.addedAt || 0) - (a.addedAt || 0); });
+    return docs[0];
+  }
+  // Plantilla vacía de "documento de referencia" para una materia recién creada:
+  // ni copia contenido de otra materia ni rompe las pantallas que leen s.doc.*.
+  function emptySubjectDoc(name) {
+    return {
+      id: null, kind: "pdf", pages: 0, sizeMB: "0",
+      title: { es: name, en: name },
+      analysis: { concepts: 0, difficulty: "med", topicsN: 0, readMin: 0, main: { es: [], en: [] }, topics: { es: [], en: [] } },
+      summary: { es: "", en: "" }
+    };
+  }
+  // Sincroniza los campos "heredados" de la materia (doc, weak) con el
+  // documento real más reciente en cuanto termina de analizarse. Así el
+  // dashboard, las presentaciones, los podcasts, etc. — que todavía leen
+  // s.doc directamente — muestran contenido real y no un resto de ejemplo.
+  function syncSubjectFromRealDoc(d) {
+    if (!d || !d.subjectId || !d.analysis) return;
+    var s = DB.subjects.filter(function (x) { return x.id === d.subjectId; })[0];
+    if (!s) return;
+    var concepts = (d.analysis.concepts || []).slice();
+    var keyPoints = (d.analysis.keyPoints || []).slice();
+    var title = L(d.title) || "";
+    s.doc = {
+      id: d.id, kind: d.kind || "pdf", pages: d.pages || 0,
+      sizeMB: d.sizeBytes ? (d.sizeBytes / 1048576).toFixed(1) : "0",
+      title: { es: title, en: title },
+      analysis: {
+        concepts: concepts.length, difficulty: d.analysis.difficulty || "med",
+        topicsN: keyPoints.length, readMin: d.analysis.readMin || 5,
+        main: { es: concepts, en: concepts },
+        topics: { es: keyPoints, en: keyPoints }
+      },
+      summary: { es: d.summary || "", en: d.summary || "" }
+    };
+    // Mientras no haya un test real hecho en esta materia, "lo que toca
+    // estudiar" sale de los conceptos reales del documento recién subido,
+    // nunca de una materia de ejemplo distinta.
+    if (!DB.lastTestBySubject[s.id]) {
+      var studyTopics = concepts.slice(0, 3);
+      s.weak = { es: studyTopics, en: studyTopics };
+    }
+    persist("subjects");
+  }
   function docNoteText(code) {
     var en = DB.lang === "en";
     var M = {
@@ -2039,7 +2094,10 @@
     if (Array.isArray(DB.documents) && DB.documents.length) return;
     var now = Date.now(), list = [];
     DB.subjects.forEach(function (s, si) {
-      if (s.doc) {
+      // s.doc.id === null marca la plantilla vacía de una materia real sin
+      // documentos todavía (ver emptySubjectDoc) — nunca se convierte en un
+      // documento "de ejemplo" fantasma.
+      if (s.doc && s.doc.id != null) {
         var a = s.doc.analysis || {};
         list.push({
           id: s.doc.id || uid(), subjectId: s.id, title: s.doc.title, kind: s.doc.kind || "pdf",
@@ -2885,8 +2943,9 @@
 
   /* ---- Dashboard ---- */
   V.dashboard = function () {
-    if (S.dashFirst) return V["st-first"]();
+    if (S.dashFirst || !DB.subjects.length) return V["st-first"]();
     var s = cur();
+    var hasContent = subjectHasRealContent(s.id);
     var pct = Math.min(100, Math.round(DB.studiedMin / DB.goalMin * 100));
     var lt = DB.lastTestBySubject[s.id];
     var upcoming = DB.calendar.filter(function (x) { return !x.done && x.date >= isoDate(addDays(0)); }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
@@ -2894,15 +2953,28 @@
     var examDays = nextExam ? Math.round((new Date(nextExam.date) - addDays(0)) / 86400e3) : 0;
     var docTopic = L(s.doc.title).replace(/\.(pdf|PDF)$/, "");
     var nextStepText = reviewsDue(s.id) > 0 ? t("dash.reviewTopic", { topic: docTopic }) : t("dash.studyWeak", { topic: (L(s.weak)[0] || docTopic) });
+    // Sin ningún archivo real subido a esta materia todavía no hay forma de
+    // saber qué le falta por estudiar, así que la tarjeta principal invita a
+    // subir el primer material en vez de inventarse algo que "repasar".
     var body = topbar(greeting() + ", " + USER.name, { actions: subjSwitcher() }) +
       '<div class="wrap stagger">' +
-        '<div class="card card-lg" style="border-color:var(--accent-line)">' +
-          '<div class="eyebrow" style="color:var(--accent)">' + t("dash.nextStep") + "</div>" +
-          '<div class="row" style="gap:12px;margin-top:12px">' + subjIcon(s, "sm") +
-            '<div><div style="font-size:19px;font-weight:600;letter-spacing:-.02em">' + nextStepText + "</div>" +
-            '<div class="txt-sm txt-muted" style="margin-top:2px">' + L(s.name) + " · " + t("dash.estimated", { n: 24 }) + "</div></div></div>" +
-          '<p class="txt-sm txt-muted" style="margin-top:14px">' + t("dash.reason") + "</p>" +
-          '<button class="btn btn-primary btn-lg btn-block" style="margin-top:16px" data-action="dash-start">' + icon("play", 15) + t("dash.startSession") + "</button></div>" +
+        (!hasContent ?
+          '<div class="card card-lg" style="border-color:var(--accent-line)">' +
+            '<div class="eyebrow" style="color:var(--accent)">' + t("dash.nextStep") + "</div>" +
+            '<div class="row" style="gap:12px;margin-top:12px">' + subjIcon(s, "sm") +
+              '<div><div style="font-size:19px;font-weight:600;letter-spacing:-.02em">' + t("notes.emptyTitle") + "</div>" +
+              '<div class="txt-sm txt-muted" style="margin-top:2px">' + L(s.name) + "</div></div></div>" +
+            '<p class="txt-sm txt-muted" style="margin-top:14px">' + t("notes.emptySub") + "</p>" +
+            '<button class="btn btn-primary btn-lg btn-block" style="margin-top:16px" data-action="add-material">' + icon("plus", 15) + t("notes.addMaterial") + "</button></div>"
+        :
+          '<div class="card card-lg" style="border-color:var(--accent-line)">' +
+            '<div class="eyebrow" style="color:var(--accent)">' + t("dash.nextStep") + "</div>" +
+            '<div class="row" style="gap:12px;margin-top:12px">' + subjIcon(s, "sm") +
+              '<div><div style="font-size:19px;font-weight:600;letter-spacing:-.02em">' + nextStepText + "</div>" +
+              '<div class="txt-sm txt-muted" style="margin-top:2px">' + L(s.name) + " · " + t("dash.estimated", { n: 24 }) + "</div></div></div>" +
+            '<p class="txt-sm txt-muted" style="margin-top:14px">' + t("dash.reason") + "</p>" +
+            '<button class="btn btn-primary btn-lg btn-block" style="margin-top:16px" data-action="dash-start">' + icon("play", 15) + t("dash.startSession") + "</button></div>"
+        ) +
 
         (lt ? '<button class="card" style="margin-top:14px;width:100%;text-align:left" data-nav="results"><div class="between"><div><div class="eyebrow">' + t("dash.lastTest") + "</div>" +
           '<div style="margin-top:6px;font-size:15px">' + t("dash.lastTestSub", { score: lt.score, total: lt.total, topic: L(s.name) }) + "</div></div>" + ring(Math.round(lt.score / lt.total * 100), 44, 4) + "</div></button>" : "") +
@@ -2921,8 +2993,8 @@
         (nextExam && examDays <= 7 ? '<div class="ai-block" style="margin-top:14px"><div class="ah">' + icon("calendar", 13) + t("dash.nextExam") + "</div>" +
           '<div class="txt-sm">' + L(nextExam.title) + " · " + t("dash.inDays", { n: examDays }) + '</div><button class="ai-link" style="margin-top:10px" data-action="go-plan" data-exam="' + nextExam.id + '">' + icon("wand", 14) + t("dash.seePlan") + "</button></div>" : "") +
 
-        '<div class="card" style="margin-top:14px"><div class="between"><span class="h-sec">' + t("dash.weakTitle") + '</span><button class="btn btn-ghost btn-sm" data-nav="subject" data-tab="weak">' + t("common.seeAll") + "</button></div>" +
-          '<div class="divide" style="margin-top:4px">' + L(s.weak).map(function (w) { return weakRow(w, L(s.name)); }).join("") + "</div></div>" +
+        (hasContent ? '<div class="card" style="margin-top:14px"><div class="between"><span class="h-sec">' + t("dash.weakTitle") + '</span><button class="btn btn-ghost btn-sm" data-nav="subject" data-tab="weak">' + t("common.seeAll") + "</button></div>" +
+          '<div class="divide" style="margin-top:4px">' + L(s.weak).map(function (w) { return weakRow(w, L(s.name)); }).join("") + "</div></div>" : "") +
 
         '<div class="card" style="margin-top:14px;border-color:var(--accent-line)"><div class="row" style="gap:12px">' +
           '<span style="width:36px;height:36px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;flex-shrink:0">' + icon("spark", 17) + "</span>" +
@@ -2952,7 +3024,7 @@
       '<div class="wrap wide"><div class="stagger" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px">' +
         DB.subjects.map(function (s) {
           var due = reviewsDue(s.id);
-          var ndocs = (s.doc ? 1 : 0) + (s.extraDocs ? s.extraDocs.length : 0);
+          var ndocs = docsOfSubject(s.id).length;
           return '<button class="card" style="text-align:left" data-action="open-subject" data-id="' + s.id + '"><div class="row" style="gap:12px">' + subjIcon(s) +
             '<div style="flex:1;min-width:0"><div style="font-weight:600;letter-spacing:-.01em">' + L(s.name) + '</div><div class="txt-sm txt-muted">' + ndocs + " " + (ndocs === 1 ? t("subjects.doc1") : t("subjects.docs")) + "</div></div>" +
             (due ? pill(String(due), "accent") : pill(icon("check", 11), "good")) + "</div>" +
@@ -3264,7 +3336,16 @@
   /* ---- Fill the word ---- */
   V.fillblank = function () {
     var s = cur();
-    var items = (EXTRA_STUDY[s.id] && EXTRA_STUDY[s.id].fill) || (EXTRA_STUDY.hist.fill);
+    // Este ejercicio solo existe como contenido de ejemplo para las materias
+    // demo; nunca se rellena con el de otra materia. Sin él, se muestra un
+    // estado vacío en vez de contenido que no le pertenece.
+    var items = (EXTRA_STUDY[s.id] && EXTRA_STUDY[s.id].fill) || [];
+    if (!items.length) {
+      return chrome("dashboard", topbar(t("fib.title"), { back: "path", noAi: true }) +
+        '<div class="wrap"><div class="empty" style="padding-top:40px"><div class="eic">' + icon("notes", 22) + "</div><p>" +
+        (DB.lang === "en" ? "This exercise isn't available yet for this subject." : "Este ejercicio todavía no está disponible para esta materia.") +
+        "</p></div></div>", { noBottom: true });
+    }
     var i = S.fibIndex || 0;
     var it = items[i];
     var parts = L(it.s).split("___");
@@ -3291,7 +3372,15 @@
     var inner, title;
     if (mode === "match") {
       title = t("rm.matchTitle");
-      var pairs = (EXTRA_STUDY[s.id] && EXTRA_STUDY[s.id].match) || EXTRA_STUDY.hist.match;
+      // Igual que en fillblank: este ejercicio es contenido de ejemplo de las
+      // materias demo — nunca se rellena con el de otra materia real.
+      var pairs = (EXTRA_STUDY[s.id] && EXTRA_STUDY[s.id].match) || [];
+      if (!pairs.length) {
+        return chrome("dashboard", topbar(t("mode." + mode), { back: "path", noAi: true }) +
+          '<div class="wrap"><div class="empty" style="padding-top:40px"><div class="eic">' + icon("notes", 22) + "</div><p>" +
+          (DB.lang === "en" ? "This exercise isn't available yet for this subject." : "Este ejercicio todavía no está disponible para esta materia.") +
+          "</p></div></div>", { noBottom: true });
+      }
       var defs = pairs.map(function (p, i) { return { i: i, txt: L(p.d) }; });
       if (!S.rmShuffled) { S.rmShuffled = defs.slice().sort(function () { return Math.random() - 0.5; }); S.rmPick = {}; }
       inner = '<div class="stack" style="gap:12px">' + pairs.map(function (p, i) {
@@ -3307,7 +3396,14 @@
           : '<button class="btn btn-primary btn-block btn-lg" data-action="rm-check">' + t("fib.check") + "</button>") + "</div>";
     } else if (mode === "identify") {
       title = t("rm.identifyTitle");
-      var q = s.quiz[0];
+      var idQuiz = activeQuiz();
+      if (!idQuiz.length) {
+        return chrome("dashboard", topbar(t("mode." + mode), { back: "path", noAi: true }) +
+          '<div class="wrap"><div class="empty" style="padding-top:40px"><div class="eic">' + icon("notes", 22) + "</div><p>" +
+          (DB.lang === "en" ? "This exercise isn't available yet for this subject." : "Este ejercicio todavía no está disponible para esta materia.") +
+          "</p></div></div>", { noBottom: true });
+      }
+      var q = idQuiz[0];
       inner = '<p class="fib-sentence" style="font-size:16px">' + L(q.q) + "</p>" +
         '<div class="grid" style="gap:10px;margin-top:16px">' + L(q.opts).map(function (o, i) {
           var cls = ""; if (S.rmChecked) { if (i === q.correct) cls = "correct"; else if (i === S.rmPickOne) cls = "wrong"; }
@@ -3396,7 +3492,7 @@
     var rdR = S.reviewDoc ? docById(S.reviewDoc) : null;
     var lt = rdR
       ? { score: (typeof S.qScore === "number" ? S.qScore : 0), total: Math.max(1, (rdR.quiz || []).length || 1) }
-      : (DB.lastTestBySubject[s.id] || { score: 2, total: s.quiz.length });
+      : (DB.lastTestBySubject[s.id] || { score: 0, total: s.quiz.length || 1 });
     var pct = Math.round(lt.score / lt.total * 100);
     var mastered = rdR && rdR.analysis ? (rdR.analysis.concepts || []).slice(0, 3) : L(s.doc.analysis.main).slice(0, 3);
     var body = topbar(t("results.title"), { back: "dashboard", noAi: true }) +
@@ -4338,16 +4434,21 @@
       DB.subjects.forEach(function (s) { existingById[s.id] = s; });
       DB.subjects = r.subjects.map(function (row) {
         var ex = existingById[row.id];
-        var base = ex ? clone(ex) : clone(SUBJECTS[0]);
+        // Una materia que llega por primera vez (p.ej. desde otro dispositivo)
+        // nunca se rellena con el contenido de otra materia de ejemplo — se le
+        // da la misma base vacía que usa "crear materia".
+        var base = ex ? clone(ex) : {
+          weak: { es: [], en: [] }, flashcards: [], quiz: [], ai: { es: {}, en: {} },
+          doc: emptySubjectDoc(row.name), extraDocs: []
+        };
         base.id = row.id;
         base.name = { es: row.name, en: row.name };
         base.icon = row.icon || base.icon || "book";
         base.color = row.color || base.color || "#5A54C9";
         base.mastery = (row.mastery != null) ? row.mastery : (base.mastery || 0);
         if (!ex) {
-          base.testsTaken = 0; base.lastSessionDays = 0; base.extraDocs = [];
-          base.doc = clone(SUBJECTS[0].doc);
-          base.doc.id = uid(); base.doc.title = { es: row.name + ".pdf", en: row.name + ".pdf" };
+          base.testsTaken = 0; base.lastSessionDays = 0; base.extraDocs = base.extraDocs || [];
+          base.doc = emptySubjectDoc(row.name);
         }
         return base;
       });
@@ -5347,7 +5448,7 @@
       S.analysisRunning = 0; S.analysisStep = 4;
       if (rec) {
         if (rec.status === "processing") rec.status = docHasText(rec) ? "analyzed" : (rec.image ? "pending" : "failed");
-        if (docHasText(rec)) docEnsureAnalysis(rec);
+        if (docHasText(rec)) { docEnsureAnalysis(rec); syncSubjectFromRealDoc(rec); }
       }
       persist("documents");
       if (S.screen === "analysis") render(true);
@@ -5366,7 +5467,7 @@
   function go(screen) {
     if (screen !== "toolFlow") { podStop(); S.presMode = 0; }
     if (screen === "flashcards") { S.fcIndex = 0; S.fcFlipped = 0; S.fcKnown = 0; S.fcAgain = 0; }
-    if (screen === "test") { S.qIndex = 0; S.qPicked = null; S.qAnswered = 0; S.qScore = 0; }
+    if (screen === "test") { S.qIndex = 0; S.qPicked = null; S.qAnswered = 0; S.qScore = 0; S.qWrongQs = []; }
     if (screen === "fillblank") { S.fibIndex = 0; S.fibChecked = 0; S.fibVal = ""; }
     if (screen === "onboarding") { S.ob = 0; S.obSource = null; S.obGoals = []; S.obLevel = null; S.obFirst = null; }
     if (screen === "analysis") { S.analysisStep = 4; S.analysisRunning = 0; }
@@ -5787,13 +5888,17 @@
     if (mode === "test" && !gateStart("tests")) return;
     S.mode = mode;
     if (mode === "flashcards") { S.fcIndex = 0; S.fcFlipped = 0; S.fcKnown = 0; S.fcAgain = 0; go2("flashcards"); }
-    else if (mode === "test") { S.qIndex = 0; S.qPicked = null; S.qAnswered = 0; S.qScore = 0; go2("test"); }
+    else if (mode === "test") { S.qIndex = 0; S.qPicked = null; S.qAnswered = 0; S.qScore = 0; S.qWrongQs = []; go2("test"); }
     else if (mode === "fill") { S.fibIndex = 0; S.fibChecked = 0; S.fibVal = ""; go2("fillblank"); }
     else { S.rmShuffled = null; S.rmPick = {}; S.rmChecked = 0; S.rmPickOne = null; go2("reviewMode"); }
   }
   function activeReviewDoc() { var d = S.reviewDoc ? docById(S.reviewDoc) : null; return (d && docHasText(d)) ? d : null; }
-  function activeFlashcards() { var d = activeReviewDoc(); return d ? docFlashcards(d) : cur().flashcards; }
-  function activeQuiz() { var d = activeReviewDoc(); return d ? docQuiz(d) : cur().quiz; }
+  // Si no se ha elegido un documento concreto para repasar, el botón general
+  // de la materia usa su documento real más reciente (tarjetas/test reales),
+  // y solo si no hay ninguno cae en s.flashcards/s.quiz (vacíos en materias
+  // nuevas; con contenido solo en las materias de ejemplo).
+  function activeFlashcards() { var d = activeReviewDoc() || primaryRealDoc(DB.currentSubjectId); return d ? docFlashcards(d) : cur().flashcards; }
+  function activeQuiz() { var d = activeReviewDoc() || primaryRealDoc(DB.currentSubjectId); return d ? docQuiz(d) : cur().quiz; }
   function docAsk(docId) {
     var d = docById(docId); if (!d) return;
     if (!canUse("aiMessages")) { openUpgrade("aiMessages"); return; }
@@ -5828,7 +5933,7 @@
       var qz = docQuiz(d);
       if (!qz.length) { toast(DB.lang === "en" ? "Not enough text for a test — try the summary or flashcards." : "No hay texto suficiente para un test — prueba el resumen o las flashcards."); return; }
       S.reviewDoc = d.id; S.mode = "test"; S._fromPath = null;
-      S.qIndex = 0; S.qPicked = null; S.qAnswered = 0; S.qScore = 0; go2("test");
+      S.qIndex = 0; S.qPicked = null; S.qAnswered = 0; S.qScore = 0; S.qWrongQs = []; go2("test");
     }
   }
   function docExercises(docId) {
@@ -5921,6 +6026,13 @@
           if (nm && nm.trim()) { var ns = makeSubject(nm.trim(), "book", "#5A54C9"); DB.currentSubjectId = ns.id; }
         } else if (S.obFirst && subj(S.obFirst)) {
           DB.currentSubjectId = S.obFirst;
+        }
+        // Si se salta el onboarding sin elegir ni crear ninguna materia, la
+        // cuenta no puede quedarse sin ninguna — el resto de la app (panel,
+        // materia actual, etc.) da por hecho que siempre hay al menos una.
+        if (!DB.subjects.length) {
+          var obDefault = makeSubject(DB.lang === "en" ? "My subject" : "Mi materia", "book", "#5A54C9");
+          DB.currentSubjectId = obDefault.id;
         }
         DB.onboardingDone = true; persist("state");
         go("dashboard");
@@ -6047,7 +6159,9 @@
       case "q-pick":
         if (S.qAnswered) return;
         S.qPicked = parseInt(d.i, 10); S.qAnswered = 1;
-        if (S.qPicked === activeQuiz()[S.qIndex].correct) S.qScore++;
+        var qCur = activeQuiz()[S.qIndex];
+        if (S.qPicked === qCur.correct) S.qScore++;
+        else { S.qWrongQs = S.qWrongQs || []; S.qWrongQs.push(L(qCur.q)); }
         render(true);
         break;
       case "q-next":
@@ -6056,11 +6170,18 @@
         if (S.qIndex + 1 < qDeck.length) { S.qIndex++; S.qPicked = null; S.qAnswered = 0; render(true); }
         else {
           DB.studiedMin += 9;
-          if (!activeReviewDoc()) {
-            DB.lastTestBySubject[sQ.id] = { score: S.qScore, total: qDeck.length };
-            sQ.testsTaken++;
-            sQ.mastery = Math.max(20, Math.min(99, sQ.mastery + (S.qScore >= qDeck.length - 1 ? 4 : S.qScore === 0 ? -2 : 1)));
+          DB.lastTestBySubject[sQ.id] = { score: S.qScore, total: qDeck.length };
+          sQ.testsTaken++;
+          sQ.mastery = Math.max(20, Math.min(99, sQ.mastery + (S.qScore >= qDeck.length - 1 ? 4 : S.qScore === 0 ? -2 : 1)));
+          // "Lo que toca repasar" sale de las preguntas falladas en ESTE test
+          // real — nunca de un tema fijo copiado de otra materia.
+          if (subjectHasRealContent(sQ.id) || activeReviewDoc()) {
+            var wrongQs = (S.qWrongQs || []).slice(0, 4);
+            if (wrongQs.length) { sQ.weak = { es: wrongQs, en: wrongQs }; DB.reviewsDueBySubject[sQ.id] = wrongQs.length; }
+            else { sQ.weak = { es: [], en: [] }; DB.reviewsDueBySubject[sQ.id] = 0; }
           }
+          S.qWrongQs = [];
+          persist("subjects");
           finishActivity("results");
         }
         break;
@@ -6070,7 +6191,7 @@
       case "fib-check": S.fibVal = (document.getElementById("fibInput") || {}).value || ""; S.fibChecked = 1; render(true); break;
       case "fib-next":
         S.fibChecked = 0; S.fibVal = "";
-        var items = (EXTRA_STUDY[DB.currentSubjectId] && EXTRA_STUDY[DB.currentSubjectId].fill) || EXTRA_STUDY.hist.fill;
+        var items = (EXTRA_STUDY[DB.currentSubjectId] && EXTRA_STUDY[DB.currentSubjectId].fill) || [];
         if ((S.fibIndex || 0) + 1 < items.length) { S.fibIndex = (S.fibIndex || 0) + 1; render(); }
         else { S.fibIndex = 0; DB.studiedMin += 4; finishActivity("path"); }
         break;
@@ -6267,11 +6388,19 @@
   });
   function go2(screen) { if (screen !== "toolFlow") { podStop(); S.presMode = 0; } S.screen = screen; render(); }
 
+  // Una materia nueva empieza SIEMPRE vacía: sin conceptos débiles, sin
+  // flashcards ni test, sin documento de ejemplo de otra materia. Hasta que
+  // el usuario suba su primer archivo, no hay forma de saber qué le falta
+  // por estudiar — así que no se lo inventamos con datos de otra materia.
   function makeSubject(name, ic, color) {
-    var base = clone(SUBJECTS[0]);
-    base.id = uid(); base.name = { es: name, en: name }; base.icon = ic || "book"; base.color = color || "#5A54C9";
-    base.mastery = 0; base.testsTaken = 0; base.lastSessionDays = 0; base.extraDocs = [];
-    base.doc.id = uid(); base.doc.title = { es: name + ".pdf", en: name + ".pdf" };
+    var base = {
+      id: uid(), name: { es: name, en: name }, icon: ic || "book", color: color || "#5A54C9",
+      mastery: 0, testsTaken: 0, lastSessionDays: 0,
+      weak: { es: [], en: [] },
+      doc: emptySubjectDoc(name), extraDocs: [],
+      flashcards: [], quiz: [],
+      ai: { es: {}, en: {} }
+    };
     DB.subjects.push(base); DB.reviewsDueBySubject[base.id] = 0;
     persist("subjects"); persist("state");
     return base;

@@ -26,3 +26,5 @@ push_to_github.bat
 push_log.txt
 fix_and_push.bat
 fix_log.txt
+push_fix.bat
+push_fix_log.txt
