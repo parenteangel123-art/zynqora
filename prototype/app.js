@@ -3069,6 +3069,7 @@
           '<button class="ai-link" data-ai-open="explain" data-ai-label="' + w.replace(/"/g, "&quot;") + '">' + icon("spark", 13) + t("fc.explainAi") + "</button></div>";
       }).join("") + "</div>" : '<div class="empty"><div class="eic" style="background:var(--good-soft);color:var(--good)">' + icon("check", 22) + "</div><p>" + t("subject.noWeak") + "</p></div>";
     }
+    inner += '<button class="btn btn-ghost btn-block" style="margin-top:16px;color:var(--danger)" data-action="subj-del" data-id="' + s.id + '">' + icon("trash", 14) + (DB.lang === "en" ? "Delete subject" : "Eliminar materia") + "</button>";
     return chrome("subjects", head + inner + "</div></div>");
   };
   /* ================== FASE D — pantallas de material ================== */
@@ -6111,6 +6112,14 @@
       case "doc-del":
         S.sheet = { kind: "confirm", act: "docdel", docId: d.id, title: t("doc.deleteQ"), body: t("doc.deleteSub"), confirmLabel: t("doc.delete") };
         render(true); break;
+      case "subj-del":
+        S.sheet = {
+          kind: "confirm", act: "subjdel", subjId: d.id,
+          title: DB.lang === "en" ? "Delete this subject?" : "¿Eliminar esta materia?",
+          body: DB.lang === "en" ? "Its notes, flashcards, tests and progress will be deleted too. This can't be undone." : "Se borrarán también sus apuntes, tarjetas, tests y progreso. No se puede deshacer.",
+          confirmLabel: DB.lang === "en" ? "Delete subject" : "Eliminar materia"
+        };
+        render(true); break;
       case "doc-summary": {
         var dsm = docById(d.id); if (!dsm || !docHasText(dsm)) { toast(DB.lang === "en" ? "No text to summarise." : "No hay texto para resumir."); break; }
         if (aiIsReal() && ZynqoraAI.generateSummary) {
@@ -6255,8 +6264,23 @@
       case "confirm-yes": {
         var cact = S.sheet && S.sheet.act;
         var cdoc = S.sheet && S.sheet.docId;
+        var csubj = S.sheet && S.sheet.subjId;
         S.sheet = null;
-        if (cact === "wipe") {
+        if (cact === "subjdel") {
+          var delDocIds = docsOfSubject(csubj).map(function (x) { return x.id; });
+          DB.subjects = DB.subjects.filter(function (x) { return x.id !== csubj; });
+          DB.documents = (DB.documents || []).filter(function (x) { return x.subjectId !== csubj; });
+          DB.calendar = (DB.calendar || []).filter(function (x) { return x.subjectId !== csubj; });
+          DB.conversations = (DB.conversations || []).filter(function (c) { return c.contextId !== csubj && delDocIds.indexOf(c.docId) === -1; });
+          if (DB.reviewsDueBySubject) delete DB.reviewsDueBySubject[csubj];
+          if (DB.lastTestBySubject) delete DB.lastTestBySubject[csubj];
+          if (S.docId && delDocIds.indexOf(S.docId) !== -1) S.docId = null;
+          if (!DB.subjects.length) makeSubject(DB.lang === "en" ? "My subject" : "Mi materia", "book", "#5A54C9");
+          if (!DB.currentSubjectId || DB.currentSubjectId === csubj) DB.currentSubjectId = DB.subjects[0].id;
+          persist("subjects"); persist("documents"); persist("calendar"); persist("conversations"); persist("state"); Store.flush();
+          S.screen = "subjects"; render();
+          toast(DB.lang === "en" ? "Subject deleted" : "Materia eliminada");
+        } else if (cact === "wipe") {
           Store.clearAll().then(function () {
             try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf("zynqora.") === 0) localStorage.removeItem(k); }); } catch (e) {}
             resetLocalData();
