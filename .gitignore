@@ -32,3 +32,9 @@ push_fix2.bat
 push_fix2_log.txt
 push_fix3.bat
 push_fix3_log.txt
+push_fix5.bat
+push_fix5_log.txt
+push_fix*.bat
+push_fix*_log.txt
+push_fix6.bat
+push_fix6_log.txt

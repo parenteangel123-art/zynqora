@@ -1147,6 +1147,15 @@
     return '<svg viewBox="0 0 24 24" width="' + (size || 20) + '" height="' + (size || 20) + '" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (I[name] || "") + "</svg>";
   }
   var SUBJECT_ICONS = ["landmark", "sigma", "dna", "coins", "flask", "atom", "book", "brain", "globe", "palette"];
+  // Materias de idioma: si se marca una, la IA y los repasos de esa materia
+  // salen en ese idioma aunque el idioma de la app sea otro.
+  var LANG_SUBJ = [
+    { v: "it", flag: "🇮🇹", es: "Italiano", en: "Italian" },
+    { v: "fr", flag: "🇫🇷", es: "Francés", en: "French" },
+    { v: "en", flag: "🇬🇧", es: "Inglés", en: "English" },
+    { v: "pt", flag: "🇵🇹", es: "Portugués", en: "Portuguese" }
+  ];
+  function langSubjName(v) { var o = LANG_SUBJ.filter(function (x) { return x.v === v; })[0]; return o ? (DB.lang === "en" ? o.en : o.es) : ""; }
 
   /* ---------------- i18n ---------------- */
   var I18N = {
@@ -2719,7 +2728,10 @@
 
   var STOPWORDS = {
     es: ("el la los las un una unos unas de del a al y o u que se su sus lo le les me mi mis te tu tus nos os en por para con sin so sobre entre hasta desde tras ante bajo cabe hacia según durante mediante como más menos muy tan tanto ya no ni si sí son fue era eran fueron ser es está estan están estar este esta estos estas ese esa esos esas aquel aquella cuando donde cual cuales quien quienes porque pero aunque sino también así pues entonces hay han ha he has había habían haber sido cada todo toda todos todas otro otra otros otras mismo misma sus le lo uno dos tres parte forma manera vez veces caso casos hecho través").split(/\s+/),
-    en: ("the a an of to and or in on at for with without by as is are was were be been being this that these those it its his her their our your my not no nor from into than then so such can may will would could should have has had which who whom what when where why how each all both other more most less very too also just only than then there here about over under between during through against upon within into onto off out up down one two three part way case fact through").split(/\s+/)
+    en: ("the a an of to and or in on at for with without by as is are was were be been being this that these those it its his her their our your my not no nor from into than then so such can may will would could should have has had which who whom what when where why how each all both other more most less very too also just only than then there here about over under between during through against upon within into onto off out up down one two three part way case fact through").split(/\s+/),
+    it: ("il lo la i gli le un uno una di del dello della dei degli delle a al allo alla ai agli alle e o ma che chi cui non ne si se come più meno molto tanto già poi quando dove quale quali perché però anche così quindi ci vi ha hanno ho hai abbiamo avete essere è sono era erano fu fui questo questa questi queste quello quella quelli quelle suo sua suoi sue mio mia miei mie tuo tua tuoi tue nostro nostra vostro vostra loro per con senza su tra fra sopra sotto dentro fuori verso durante mediante uno due tre parte modo volta volte caso casi fatto tutto tutta tutti tutte altro altra altri altre stesso stessa").split(/\s+/),
+    fr: ("le la les un une des de du au aux et ou que qui quoi dont où se sa ses son mes mon ma tes ton ta nos notre vos votre leur leurs se ce cet cette ces cela ceci celui celle ceux celles est sont était étaient fut être été suis es sommes êtes ont a avons avez avoir eu pour avec sans sur sous entre dans par vers chez comme plus moins très aussi déjà donc alors puis ainsi quand lorsque parce car mais cependant toutefois tout toute tous toutes autre autres même mêmes un deux trois partie façon fois cas fait à en").split(/\s+/),
+    pt: ("o a os as um uma uns umas de do da dos das ao aos à às e ou que quem qual quais onde quando porque mas também assim então pois há tem têm foi foram era eram ser é são está estão estar este esta estes estas esse essa esses essas aquele aquela aqueles aquelas seu sua seus suas meu minha meus minhas teu tua teus tuas nosso nossa nossos nossas para com sem sobre entre até desde após ante sob perante durante mediante como mais menos muito tanto já não nem se sim cada todo toda todos todas outro outra outros outras mesmo mesma um dois três parte forma vez vezes caso casos feito através em").split(/\s+/)
   };
 
   var Ingest = (function () {
@@ -2883,9 +2895,21 @@
     return { ingest: ingest, pdfText: pdfText, docxText: docxText, hasDecompression: typeof DecompressionStream !== "undefined" };
   })();
 
+  /* Frases de plantilla para las materias de idioma (it/fr/pt) — el resto de
+     la app sigue solo en es/en, pero el contenido generado para una materia
+     marcada como idioma usa estas. */
+  var GLANG = {
+    es: { qIs: "¿Qué es ", qWas: "¿Qué fue ", fill: "Completa la frase — ", whichWord: "¿Qué palabra completa esta frase del documento?", docSays: "El documento dice: ", fromDoc: "Según el documento:", notFound: "No encuentro eso en este documento. Trata sobre: ", analyse: "Analiza y relaciónalo con el resto del tema", define: "Define en una frase", explainOwn: "Explícalo con tus palabras", summMain: "Resume la idea principal del documento en 3 líneas." },
+    en: { qIs: "What is ", qWas: "What was ", fill: "Fill in the blank — ", whichWord: "Which word completes this line from the document?", docSays: "The document reads: ", fromDoc: "From the document:", notFound: "I couldn't find that in this document. It covers: ", analyse: "Analyse and relate to the rest of the topic", define: "Define in one sentence", explainOwn: "Explain in your own words", summMain: "Summarise the main idea of the document in 3 lines." },
+    it: { qIs: "Che cos'è ", qWas: "Che cos'era ", fill: "Completa la frase — ", whichWord: "Quale parola completa questa frase del documento?", docSays: "Il documento dice: ", fromDoc: "Secondo il documento:", notFound: "Non trovo questo nel documento. Tratta di: ", analyse: "Analizza e collega al resto dell'argomento", define: "Definisci in una frase", explainOwn: "Spiegalo con parole tue", summMain: "Riassumi l'idea principale del documento in 3 righe." },
+    fr: { qIs: "Qu'est-ce que ", qWas: "Qu'était ", fill: "Complète la phrase — ", whichWord: "Quel mot complète cette phrase du document ?", docSays: "Le document dit : ", fromDoc: "D'après le document :", notFound: "Je ne trouve pas cela dans ce document. Il traite de : ", analyse: "Analyse et relie au reste du sujet", define: "Définis en une phrase", explainOwn: "Explique-le avec tes propres mots", summMain: "Résume l'idée principale du document en 3 lignes." },
+    pt: { qIs: "O que é ", qWas: "O que foi ", fill: "Completa a frase — ", whichWord: "Que palavra completa esta frase do documento?", docSays: "O documento diz: ", fromDoc: "Segundo o documento:", notFound: "Não encontro isso neste documento. Trata de: ", analyse: "Analisa e relaciona com o resto do tema", define: "Define numa frase", explainOwn: "Explica por palavras tuas", summMain: "Resume a ideia principal do documento em 3 linhas." }
+  };
+  function gl(lang) { return GLANG[lang || DB.lang] || GLANG.es; }
+
   /* --------- generación local extractiva a partir del texto real --------- */
   var DocGen = (function () {
-    function sw() { var m = STOPWORDS[DB.lang === "en" ? "en" : "es"], o = {}; m.forEach(function (w) { o[w] = 1; }); return o; }
+    function sw() { var m = STOPWORDS[DB.lang] || STOPWORDS.es, o = {}; m.forEach(function (w) { o[w] = 1; }); return o; }
     function words(text) { return (String(text || "").toLowerCase().match(/[a-zà-ÿ0-9']{2,}/gi) || []); }
     function sentences(text) {
       var t = String(text || "").replace(/\s+/g, " ").trim();
@@ -2949,13 +2973,13 @@
       if (kp.length < 3) kp = a.sents.slice(0, Math.min(5, a.sents.length));
       return { summary: top.map(function (x) { return x.s; }).join(" "), keyPoints: kp, concepts: a.concepts, wordCount: a.wordCount, readMin: a.readMin, difficulty: a.difficulty };
     }
-    function flashcards(text, n) {
+    function flashcards(text, n, lang) {
       n = n || 8;
-      var a = analyze(text), en = DB.lang === "en", cards = [];
+      var a = analyze(text), L2 = gl(lang), cards = [];
       a.sents.forEach(function (s) {
         if (cards.length >= n) return;
         var m = s.match(/^([A-ZÁÉÍÓÚÑÀ-Ý][\wà-ÿ %()'\-]{2,48}?)\s+(es|era|fue|son|eran|fueron|significa|consiste en|se define como|se conoce como|is|was|are|were|means|refers to)\s+(.+)/);
-        if (m) cards.push({ q: (en ? "What " + (/\b(is|are)\b/.test(m[2]) ? "is" : "was") + " " + m[1].trim() + "?" : "¿Qué " + (/\b(es|son)\b/.test(m[2]) ? "es" : "fue") + " " + m[1].trim() + "?"), a: s.replace(/\s+/g, " ").trim() });
+        if (m) cards.push({ q: ((/\b(is|are|es|son)\b/i.test(m[2]) ? L2.qIs : L2.qWas) + m[1].trim() + "?"), a: s.replace(/\s+/g, " ").trim() });
       });
       var pool = (a.kt.phrases.concat(a.kt.terms));
       for (var i = 0; i < pool.length && cards.length < n; i++) {
@@ -2963,15 +2987,15 @@
         var re = new RegExp("(^|[^\\wà-ÿ])(" + term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")([^\\wà-ÿ]|$)", "i");
         var s2 = a.sents.filter(function (x) { return re.test(x) && x.length < 220; })[0];
         if (s2 && !cards.some(function (c) { return c.a.toLowerCase() === term.toLowerCase(); })) {
-          cards.push({ q: (en ? "Fill in the blank — " : "Completa la frase — ") + s2.replace(re, "$1_____$3"), a: term });
+          cards.push({ q: L2.fill + s2.replace(re, "$1_____$3"), a: term });
         }
       }
       return cards.slice(0, n);
     }
     function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t2 = a[i]; a[i] = a[j]; a[j] = t2; } return a; }
-    function quiz(text, n, difficulty) {
+    function quiz(text, n, difficulty, lang) {
       n = n || 5;
-      var a = analyze(text), en = DB.lang === "en";
+      var a = analyze(text), L2 = gl(lang);
       var terms = a.kt.phrases.concat(a.kt.terms).filter(function (x) { return x.length > 4; });
       terms = terms.filter(function (v, i) { return terms.map(function (x) { return x.toLowerCase(); }).indexOf(v.toLowerCase()) === i; });
       var sents = a.sents.filter(function (s) { return s.length > 34 && s.length < 230; });
@@ -2986,27 +3010,25 @@
         var stem = s.replace(new RegExp("\\b" + ans.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i"), "_____");
         var opts = shuffle([ans].concat(distract));
         out.push({
-          q: (en ? "Which word completes this line from the document?" : "¿Qué palabra completa esta frase del documento?") + "\n«" + stem + "»",
+          q: L2.whichWord + "\n«" + stem + "»",
           opts: opts, correct: opts.indexOf(ans),
-          exp: (en ? "The document reads: " : "El documento dice: ") + "“" + s + "”"
+          exp: L2.docSays + "“" + s + "”"
         });
       }
       return out.slice(0, n);
     }
-    function exercises(text, tier) {
-      var a = analyze(text), en = DB.lang === "en", out = [];
-      var verb = tier === "hard" ? (en ? "Analyse and relate to the rest of the topic" : "Analiza y relaciónalo con el resto del tema")
-        : tier === "easy" ? (en ? "Define in one sentence" : "Define en una frase")
-        : (en ? "Explain in your own words" : "Explícalo con tus palabras");
+    function exercises(text, tier, lang) {
+      var a = analyze(text), L2 = gl(lang), out = [];
+      var verb = tier === "hard" ? L2.analyse : tier === "easy" ? L2.define : L2.explainOwn;
       a.concepts.slice(0, 6).forEach(function (term) {
         var s = a.sents.filter(function (x) { return x.toLowerCase().indexOf(term.toLowerCase()) > -1; })[0];
         out.push({ q: verb + ": " + term + ".", steps: [], a: s || "" });
       });
-      if (!out.length) out.push({ q: (en ? "Summarise the main idea of the document in 3 lines." : "Resume la idea principal del documento en 3 líneas."), steps: [], a: a.sents.slice(0, 2).join(" ") });
+      if (!out.length) out.push({ q: L2.summMain, steps: [], a: a.sents.slice(0, 2).join(" ") });
       return out;
     }
-    function answer(text, question) {
-      var a = analyze(text), en = DB.lang === "en";
+    function answer(text, question, lang) {
+      var a = analyze(text), L2 = gl(lang);
       var qWords = words(question).filter(function (w) { return !sw()[w] && w.length > 2; });
       if (!qWords.length) return null;
       var ranked = a.sents.map(function (s, i) {
@@ -3014,14 +3036,14 @@
         qWords.forEach(function (w) { if (lw.indexOf(w) > -1) hits++; });
         return { s: s, i: i, hits: hits };
       }).filter(function (x) { return x.hits > 0; }).sort(function (x, y) { return y.hits - x.hits || x.i - y.i; });
-      if (!ranked.length) return { html: "<p>" + (en ? "I couldn't find that in this document. It covers: " : "No encuentro eso en este documento. Trata sobre: ") + a.concepts.slice(0, 4).join(", ") + ".</p>", grounded: false, tutor: true };
+      if (!ranked.length) return { html: "<p>" + L2.notFound + a.concepts.slice(0, 4).join(", ") + ".</p>", grounded: false, tutor: true };
       var picks = [];
       for (var i = 0; i < ranked.length && picks.length < 3; i++) {
         if (picks.indexOf(ranked[i].i) < 0 && (!picks.length || Math.abs(ranked[i].i - picks[picks.length - 1]) !== 0)) picks.push(ranked[i].i);
       }
       picks.sort(function (x, y) { return x - y; });
       var quote = picks.map(function (i) { return a.sents[i]; }).join(" ");
-      return { html: "<p>" + (en ? "From the document:" : "Según el documento:") + "</p><blockquote>" + esc(quote) + "</blockquote>", grounded: true, tutor: true };
+      return { html: "<p>" + L2.fromDoc + "</p><blockquote>" + esc(quote) + "</blockquote>", grounded: true, tutor: true };
     }
     function podcastSegments(text, title, approach, minutes, lang) {
       var en = (lang || DB.lang) === "en";
@@ -3151,7 +3173,7 @@
   function docFlashcards(d, n) {
     docEnsureAnalysis(d);
     if (!d.flashcards || !d.flashcards.length) {
-      d.flashcards = DocGen.flashcards(d.text, n || 8);
+      d.flashcards = DocGen.flashcards(d.text, n || 8, docLang(d));
       if (d.flashcards.length && !d._fcCharged) { incUsage("flashcards", d.flashcards.length); d._fcCharged = 1; persist("documents"); }
     }
     return d.flashcards;
@@ -3159,7 +3181,7 @@
   function docQuiz(d, n, difficulty) {
     docEnsureAnalysis(d);
     if (!d.quiz || !d.quiz.length) {
-      d.quiz = DocGen.quiz(d.text, n || 5, difficulty);
+      d.quiz = DocGen.quiz(d.text, n || 5, difficulty, docLang(d));
       if (d.quiz.length && !d._quizCharged) { incUsage("tests", 1); d._quizCharged = 1; persist("documents"); }
     }
     return d.quiz;
@@ -3513,6 +3535,13 @@
   var USER = { name: (DB.lang === "en" ? "Student" : "Estudiante"), initial: (DB.lang === "en" ? "S" : "E") };
 
   function subj(id) { return DB.subjects.filter(function (s) { return s.id === (id || DB.currentSubjectId); })[0] || DB.subjects[0]; }
+  // Idioma de estudio de una materia (si es una materia de idioma como Francés/Italiano/Portugués),
+  // o el idioma normal de la app si no lo es. sid puede ser un id de materia o de documento->materia.
+  function subjLang(sid) {
+    var s = sid && DB.subjects.filter(function (x) { return x.id === sid; })[0];
+    return (s && s.studyLang) || DB.lang;
+  }
+  function docLang(d) { return d ? subjLang(d.subjectId) : DB.lang; }
   function cur() { return subj(DB.currentSubjectId); }
   function reviewsDue(id) { return DB.reviewsDueBySubject[id || DB.currentSubjectId] || 0; }
 
@@ -3549,11 +3578,32 @@
         "<p>Hey! 😊 Ready to help. Shall we review something, clear up a doubt, or test you?</p>",
         "<p>Hi again! Where would you like to start?</p>",
         "<p>Hey! Good to see you. Tell me what you need and let's get to it.</p>"
+      ],
+      it: [
+        "<p>Ciao! 👋 Che bello vederti. Cosa vuoi studiare oggi?</p>",
+        "<p>Ciao! 😊 Sono pronta ad aiutarti. Ripassiamo qualcosa, chiariamo un dubbio o ti faccio una verifica?</p>",
+        "<p>Ciao di nuovo! Da dove vuoi iniziare?</p>",
+        "<p>Ehi! Sono felice di vederti. Dimmi cosa ti serve e iniziamo.</p>"
+      ],
+      fr: [
+        "<p>Salut ! 👋 Ravi de te voir. Qu'est-ce que tu veux étudier aujourd'hui ?</p>",
+        "<p>Coucou ! 😊 Je suis prête à t'aider. On révise quelque chose, on éclaircit un doute ou je te teste ?</p>",
+        "<p>Rebonjour ! Par où veux-tu commencer ?</p>",
+        "<p>Hé ! Content de te voir. Dis-moi ce dont tu as besoin et on s'y met.</p>"
+      ],
+      pt: [
+        "<p>Olá! 👋 Que bom ver-te por aqui. O que queres estudar hoje?</p>",
+        "<p>Olá! 😊 Estou pronta para ajudar. Revemos algo, esclarecemos uma dúvida ou faço-te um teste?</p>",
+        "<p>Olá de novo! Por onde queres começar?</p>",
+        "<p>Ei! Fico contente em ver-te. Diz-me o que precisas e vamos a isso.</p>"
       ]
     },
     hello: {
       es: "<p>¡Hola! 👋 Soy <strong>Zynqora AI</strong>.</p><p>Estoy aquí para ayudarte a estudiar, resolver dudas y organizar tu aprendizaje.</p><p>¿Qué quieres hacer hoy?</p>",
-      en: "<p>Hi! 👋 I'm <strong>Zynqora AI</strong>.</p><p>I'm here to help you study, answer questions and organise your learning.</p><p>What would you like to do today?</p>"
+      en: "<p>Hi! 👋 I'm <strong>Zynqora AI</strong>.</p><p>I'm here to help you study, answer questions and organise your learning.</p><p>What would you like to do today?</p>",
+      it: "<p>Ciao! 👋 Sono <strong>Zynqora AI</strong>.</p><p>Sono qui per aiutarti a studiare, rispondere ai tuoi dubbi e organizzare il tuo apprendimento.</p><p>Cosa vuoi fare oggi?</p>",
+      fr: "<p>Salut ! 👋 Je suis <strong>Zynqora AI</strong>.</p><p>Je suis là pour t'aider à étudier, répondre à tes questions et organiser ton apprentissage.</p><p>Qu'est-ce que tu veux faire aujourd'hui ?</p>",
+      pt: "<p>Olá! 👋 Sou a <strong>Zynqora AI</strong>.</p><p>Estou aqui para te ajudar a estudar, esclarecer dúvidas e organizar a tua aprendizagem.</p><p>O que queres fazer hoje?</p>"
     },
     /* ---- global topic answers (work with or without context) ---- */
     topics: {
@@ -3642,6 +3692,51 @@
         summarize: "<p>To summarise them I need the material: <strong>paste the text here</strong> or attach the file, and if you pick a <strong>context</strong> above I'll summarise that subject's notes directly.</p>",
         quiz_intro: ["<p>Let's go 👇</p>", "<p>Here we go 👇</p>", "<p>First one 👇</p>"],
         quiz_generic: "<p>Let's check. Answer this:</p><p><em>{qstem}</em></p>"
+      },
+      it: {
+        thanks: ["<p>Di niente! Sono qui quando vuoi continuare. 💪</p>", "<p>Piacere mio. In bocca al lupo con lo studio.</p>", "<p>Quando vuoi. Stai andando bene. 🙂</p>"],
+        why_failed: "<p>Ripassiamo quell'errore. Quello che conta non è la risposta corretta in sé, ma <strong>perché</strong> l'altra opzione ti sembrava valida.</p><p>Torna all'enunciato, individua il dato chiave e controlla quale condizione non era soddisfatta. {topicline}</p>",
+        improve: "<p>Per migliorare in <strong>{topic}</strong>, concentrati su <strong>{weak}</strong>.</p><ul><li>Ripassa il riassunto dell'argomento (5 min).</li><li>6 flashcard su quel concetto oggi.</li><li>Un test breve domani per fissarlo.</li></ul>",
+        plan: "<p>Ecco come dividerei lo studio per il tuo esame:</p><ul><li><strong>Lun</strong> · Riassunto + 8 flashcard dell'argomento principale.</li><li><strong>Mar</strong> · Ripasso di {weak}.</li><li><strong>Mer</strong> · Flashcard su tutta la materia.</li><li><strong>Gio</strong> · Test di pratica completo.</li><li><strong>Ven</strong> · Ripasso leggero, senza stress.</li></ul><p class=\"ai-followup\">Posso aggiungere questo piano al tuo calendario, se ti va bene.</p>",
+        prep_exam: "<p>Per preparare l'esame di <strong>{topic}</strong>, ti propongo tre blocchi:</p><ol><li><strong>Capire</strong>: leggi il riassunto e chiedimi ciò che non ti è chiaro.</li><li><strong>Praticare</strong>: flashcard + completa la parola di {c1} e {c2}.</li><li><strong>Verificare</strong>: un test completo e ripassiamo insieme gli errori.</li></ol><p>Dimmi la data e te lo suddivido per giorni.</p>",
+        default_ctx: "<p>Dimmi cosa ti serve su <strong>{topic}</strong> e lo vediamo: un concetto, un esempio, un riassunto o un test.</p>",
+        default_free: "<p>Dimmi cosa vuoi studiare e ti aiuto subito.</p>",
+        detailed_generic: "<p>Te lo spiego passo dopo passo 👇</p><p><strong>1 · L'idea:</strong> prima fissa <strong>{term}</strong> in una frase, con parole tue.<br><strong>2 · Un esempio:</strong> cerca un caso concreto che già conosci e verificalo con quella frase.<br><strong>3 · Il dettaglio:</strong> nota la condizione o eccezione che spesso capita all'esame.</p><p>Dimmi il tuo corso o incollami il pezzo dei tuoi appunti su <strong>{term}</strong> e lo sviluppo con esempi al tuo livello.</p>",
+        direct_generic: "<p>Vediamo <strong>{term}</strong> 👇</p><p>Per darti una risposta precisa mi serve un po' di più: dimmi <strong>di quale materia</strong> si tratta o <strong>incollami il pezzo dei tuoi appunti</strong>, e te lo spiego con la definizione, un esempio svolto e un trucco per ricordarlo.</p>",
+        help_exercise: "<p>Vediamolo 👇</p><p>Per aiutarti davvero mi serve il <strong>testo dell'esercizio</strong> (incollalo qui o fagli una foto e allegala). Con quello te lo scompongo passo dopo passo.</p><p>Nel frattempo dimmi: cosa hai provato e dove ti sei bloccato?</p>",
+        summarize: "<p>Per riassumerli mi serve il materiale: <strong>incolla il testo qui</strong> o allega il file, e se scegli un <strong>contesto</strong> sopra riassumo direttamente gli appunti di quella materia.</p>",
+        quiz_intro: ["<p>Andiamo 👇</p>", "<p>Cominciamo 👇</p>", "<p>Ecco la prima 👇</p>"],
+        quiz_generic: "<p>Verifichiamolo. Rispondimi a questo:</p><p><em>{qstem}</em></p>"
+      },
+      fr: {
+        thanks: ["<p>De rien ! Je suis là quand tu veux continuer. 💪</p>", "<p>Avec plaisir. Bon courage pour tes études.</p>", "<p>Quand tu veux. Tu progresses bien. 🙂</p>"],
+        why_failed: "<p>Reprenons cette erreur. Ce qui compte, ce n'est pas la bonne réponse elle-même, mais <strong>pourquoi</strong> l'autre option te semblait valable.</p><p>Reviens à l'énoncé, repère l'information clé et vérifie quelle condition n'était pas remplie. {topicline}</p>",
+        improve: "<p>Pour progresser en <strong>{topic}</strong>, concentre-toi sur <strong>{weak}</strong>.</p><ul><li>Relis le résumé du sujet (5 min).</li><li>6 flashcards sur ce concept aujourd'hui.</li><li>Un test court demain pour bien le fixer.</li></ul>",
+        plan: "<p>Voici comment je répartirais tes révisions pour l'examen :</p><ul><li><strong>Lun</strong> · Résumé + 8 flashcards du sujet principal.</li><li><strong>Mar</strong> · Révision de {weak}.</li><li><strong>Mer</strong> · Flashcards sur toute la matière.</li><li><strong>Jeu</strong> · Test blanc complet.</li><li><strong>Ven</strong> · Révision légère, sans stress.</li></ul><p class=\"ai-followup\">Je peux ajouter ce plan à ton calendrier si ça te convient.</p>",
+        prep_exam: "<p>Pour préparer l'examen de <strong>{topic}</strong>, je te propose trois étapes :</p><ol><li><strong>Comprendre</strong> : lis le résumé et demande-moi ce qui n'est pas clair.</li><li><strong>S'entraîner</strong> : flashcards + complète le mot sur {c1} et {c2}.</li><li><strong>Vérifier</strong> : un test complet, puis on revoit tes erreurs ensemble.</li></ol><p>Donne-moi la date et je te le répartis par jour.</p>",
+        default_ctx: "<p>Dis-moi ce dont tu as besoin sur <strong>{topic}</strong> et on s'en occupe : un concept, un exemple, un résumé ou un test.</p>",
+        default_free: "<p>Dis-moi ce que tu veux étudier et je t'aide tout de suite.</p>",
+        detailed_generic: "<p>Je t'explique étape par étape 👇</p><p><strong>1 · L'idée :</strong> fixe d'abord <strong>{term}</strong> en une phrase, avec tes propres mots.<br><strong>2 · Un exemple :</strong> trouve un cas concret que tu connais déjà et vérifie-le avec cette phrase.<br><strong>3 · La nuance :</strong> repère la condition ou l'exception qui tombe souvent à l'examen.</p><p>Dis-moi ta filière, ou colle-moi l'extrait de tes notes sur <strong>{term}</strong>, et je le développe avec des exemples à ton niveau.</p>",
+        direct_generic: "<p>Voyons <strong>{term}</strong> 👇</p><p>Pour bien te répondre j'ai besoin d'un peu plus : dis-moi <strong>de quelle matière</strong> il s'agit ou <strong>colle-moi l'extrait de tes notes</strong>, et je t'explique avec la définition, un exemple résolu et une astuce pour t'en souvenir.</p>",
+        help_exercise: "<p>Regardons ça 👇</p><p>Pour vraiment t'aider j'ai besoin de <strong>l'énoncé de l'exercice</strong> (colle-le ici, ou prends-le en photo et joins-la). Avec ça je te le décompose étape par étape.</p><p>En attendant, dis-moi : qu'as-tu déjà essayé et où es-tu bloqué ?</p>",
+        summarize: "<p>Pour les résumer j'ai besoin du contenu : <strong>colle le texte ici</strong> ou joins le fichier, et si tu choisis un <strong>contexte</strong> ci-dessus je résume directement les notes de cette matière.</p>",
+        quiz_intro: ["<p>C'est parti 👇</p>", "<p>On y va 👇</p>", "<p>Voici la première 👇</p>"],
+        quiz_generic: "<p>Vérifions. Réponds à ceci :</p><p><em>{qstem}</em></p>"
+      },
+      pt: {
+        thanks: ["<p>De nada! Estou aqui quando quiseres continuar. 💪</p>", "<p>Foi um prazer. Boa sorte com os estudos.</p>", "<p>Sempre que quiseres. Estás a ir bem. 🙂</p>"],
+        why_failed: "<p>Vamos rever esse erro. O importante não é a resposta certa em si, mas <strong>porque</strong> é que a outra opção te pareceu válida.</p><p>Volta ao enunciado, localiza o dado-chave e verifica que condição não se cumpria. {topicline}</p>",
+        improve: "<p>Para melhorares em <strong>{topic}</strong>, foca-te em <strong>{weak}</strong>.</p><ul><li>Revê o resumo do tema (5 min).</li><li>6 flashcards sobre esse conceito hoje.</li><li>Um teste curto amanhã para fixar.</li></ul>",
+        plan: "<p>Assim distribuía o estudo para o teu exame:</p><ul><li><strong>Seg</strong> · Resumo + 8 flashcards do tema principal.</li><li><strong>Ter</strong> · Revisão de {weak}.</li><li><strong>Qua</strong> · Flashcards de toda a matéria.</li><li><strong>Qui</strong> · Teste de prática completo.</li><li><strong>Sex</strong> · Revisão leve, sem pressão.</li></ul><p class=\"ai-followup\">Posso adicionar este plano ao teu calendário, se te for bem.</p>",
+        prep_exam: "<p>Para preparares o exame de <strong>{topic}</strong>, proponho três blocos:</p><ol><li><strong>Perceber</strong>: lê o resumo e pergunta-me o que não ficou claro.</li><li><strong>Praticar</strong>: flashcards + completa a palavra de {c1} e {c2}.</li><li><strong>Verificar</strong>: um teste completo e revemos os erros juntos.</li></ol><p>Diz-me a data e eu distribuo por dias.</p>",
+        default_ctx: "<p>Diz-me o que precisas sobre <strong>{topic}</strong> e vemos: um conceito, um exemplo, um resumo ou um teste.</p>",
+        default_free: "<p>Diz-me o que queres estudar e ajudo-te já.</p>",
+        detailed_generic: "<p>Explico passo a passo 👇</p><p><strong>1 · A ideia:</strong> primeiro fixa <strong>{term}</strong> numa frase, por palavras tuas.<br><strong>2 · Um exemplo:</strong> procura um caso concreto que já conheças e testa-o com essa frase.<br><strong>3 · O pormenor:</strong> repara na condição ou exceção que costuma sair no exame.</p><p>Diz-me o teu curso ou cola aqui o trecho dos teus apontamentos sobre <strong>{term}</strong> e desenvolvo com exemplos ao teu nível.</p>",
+        direct_generic: "<p>Vamos a <strong>{term}</strong> 👇</p><p>Para te dar uma resposta certeira preciso de mais um pouco: diz-me <strong>de que disciplina</strong> se trata ou <strong>cola o trecho dos teus apontamentos</strong>, e explico com a definição, um exemplo resolvido e um truque para memorizar.</p>",
+        help_exercise: "<p>Vamos ver isso 👇</p><p>Para te ajudar mesmo preciso do <strong>enunciado do exercício</strong> (cola-o aqui ou tira uma foto e anexa-a). Com isso desmonto-o passo a passo.</p><p>Entretanto, diz-me: o que já tentaste e onde ficaste preso?</p>",
+        summarize: "<p>Para os resumir preciso do material: <strong>cola o texto aqui</strong> ou anexa o ficheiro, e se escolheres um <strong>contexto</strong> acima resumo diretamente os apontamentos dessa disciplina.</p>",
+        quiz_intro: ["<p>Vamos lá 👇</p>", "<p>Começamos 👇</p>", "<p>Aqui tens a primeira 👇</p>"],
+        quiz_generic: "<p>Vamos verificar. Responde a isto:</p><p><em>{qstem}</em></p>"
       }
     },
     tutorBtns: ["ai.tSimple", "ai.tExample", "ai.tQuiz", "ai.tDeeper"],
@@ -4100,7 +4195,7 @@
           var due = reviewsDue(s.id);
           var ndocs = docsOfSubject(s.id).length;
           return '<button class="card" style="text-align:left" data-action="open-subject" data-id="' + s.id + '"><div class="row" style="gap:12px">' + subjIcon(s) +
-            '<div style="flex:1;min-width:0"><div style="font-weight:600;letter-spacing:-.01em">' + L(s.name) + '</div><div class="txt-sm txt-muted">' + ndocs + " " + (ndocs === 1 ? t("subjects.doc1") : t("subjects.docs")) + "</div></div>" +
+            '<div style="flex:1;min-width:0"><div style="font-weight:600;letter-spacing:-.01em">' + L(s.name) + (s.studyLang ? " " + (LANG_SUBJ.filter(function (x) { return x.v === s.studyLang; })[0] || {}).flag : "") + '</div><div class="txt-sm txt-muted">' + ndocs + " " + (ndocs === 1 ? t("subjects.doc1") : t("subjects.docs")) + "</div></div>" +
             (due ? pill(String(due), "accent") : pill(icon("check", 11), "good")) + "</div>" +
             '<div style="margin-top:14px">' + barEl(s.mastery, s.color) + '</div><div class="txt-sm txt-muted mono" style="margin-top:7px">' + t("subjects.mastery", { n: s.mastery }) + "</div></button>";
         }).join("") +
@@ -4114,7 +4209,7 @@
     var s = cur();
     var tab = S.subjTab;
     var tabs = ["docs", "flashcards", "tests", "progress", "weak"];
-    var head = topbar(L(s.name), { back: "subjects", actions: subjSwitcher() }) +
+    var head = topbar(L(s.name) + (s.studyLang ? " " + (LANG_SUBJ.filter(function (x) { return x.v === s.studyLang; })[0] || {}).flag : ""), { back: "subjects", actions: subjSwitcher() }) +
       '<div class="wrap"><div class="card card-lg" style="display:flex;align-items:center;gap:16px">' + subjIcon(s, "lg") +
         '<div style="flex:1"><div class="eyebrow">' + t("subject.overall") + '</div><div style="font-size:26px;font-weight:600;letter-spacing:-.02em;margin-top:2px">' + s.mastery + "%</div></div>" + ring(s.mastery, 54, 5) + "</div>" +
       '<div class="tabs" style="margin-top:20px">' + tabs.map(function (x) { return '<button class="' + (x === tab ? "on" : "") + '" data-action="subj-tab" data-tab="' + x + '">' + t("tab." + x) + "</button>"; }).join("") + "</div>" +
@@ -5144,7 +5239,14 @@
           tutor: true, demo: true
         }, 520);
       }
-      var r = ZAI.ask(o.text, { intent: o.intent, contextId: o.contextId });
+      // Si la conversación es de una materia de idioma (francés, italiano...),
+      // que la IA conteste en ese idioma aunque la app esté en español/inglés.
+      var effSid = ZAI.detectSubject(o.text) || o.contextId;
+      var effLang = effSid ? subjLang(effSid) : DB.lang;
+      var prevLang = DB.lang, r;
+      if (effLang !== DB.lang) DB.lang = effLang;
+      try { r = ZAI.ask(o.text, { intent: o.intent, contextId: o.contextId }); }
+      finally { DB.lang = prevLang; }
       r.demo = true;
       return this._wait(r, 620);
     },
@@ -5472,7 +5574,11 @@
       touchStreak: function () { return _rpc("touch_streak", {}); }
     };
   })();
-  try { window.ZynqoraCloud = { Auth: Auth, Sync: Sync, config: AI_CONFIG }; } catch (e) {}
+  // (Antes aquí se exponía window.ZynqoraCloud con el AI_CONFIG editable y los
+  // módulos Auth/Sync — era solo un resto de depuración sin ningún uso real en
+  // la app, y cualquiera podía abrir la consola del navegador y tocarlo. Se
+  // quita para que no haya ninguna puerta para cambiar el servidor de IA,
+  // las claves o la sesión desde fuera del código.)
 
   // Convierte lo que devuelve Sync.pull() (filas de Postgres) de vuelta a la
   // forma que usa DB.* en el front. Es el espejo de rowsFor() en Sync.
@@ -6271,9 +6377,15 @@
       var col = S.sheet.color || "#B07D3C", ic = S.sheet.icon || "landmark";
       var colors = ["#B07D3C", "#5A54C9", "#3E8E6F", "#4B6FB0", "#A0506B", "#C0873C"];
       inner = "<h3>" + t("subjects.newTitle") + '</h3><p class="sub">' + t("subjects.newSub") + "</p>" +
-        '<label class="label">' + t("ob.nameLabel") + '</label><input class="field" id="sheetName" placeholder="' + t("subjects.namePlaceholder") + '">' +
+        '<label class="label">' + t("ob.nameLabel") + '</label><input class="field" id="sheetName" value="' + esc(S.sheet.name || "") + '" placeholder="' + t("subjects.namePlaceholder") + '">' +
         '<label class="label" style="margin-top:16px">' + t("subjects.icon") + '</label><div class="icon-pick">' + SUBJECT_ICONS.map(function (n) { return '<button class="' + (n === ic ? "on" : "") + '" data-action="sheet-icon" data-v="' + n + '">' + icon(n, 18) + "</button>"; }).join("") + "</div>" +
         '<label class="label" style="margin-top:16px">' + t("subjects.color") + '</label><div class="color-pick">' + colors.map(function (c) { return '<button class="' + (c === col ? "on" : "") + '" style="background:' + c + ";color:" + c + '" data-action="sheet-color" data-v="' + c + '"></button>'; }).join("") + "</div>" +
+        '<label class="label" style="margin-top:16px">' + (DB.lang === "en" ? "Language subject (optional)" : "¿Es una asignatura de idioma? (opcional)") + '</label>' +
+        '<div class="chip-row">' +
+          '<button class="chip-sel ' + (!S.sheet.studyLang ? "on" : "") + '" data-action="sheet-studylang" data-v="">' + (DB.lang === "en" ? "No" : "No") + "</button>" +
+          LANG_SUBJ.map(function (o) { return '<button class="chip-sel ' + (S.sheet.studyLang === o.v ? "on" : "") + '" data-action="sheet-studylang" data-v="' + o.v + '">' + o.flag + " " + (DB.lang === "en" ? o.en : o.es) + "</button>"; }).join("") +
+        "</div>" +
+        (S.sheet.studyLang ? '<p class="txt-sm txt-muted" style="margin-top:8px">' + (DB.lang === "en" ? "Zynqora AI and reviews for this subject will be in " + langSubjName(S.sheet.studyLang) + "." : "La IA y los repasos de esta materia saldrán en " + langSubjName(S.sheet.studyLang) + ".") + "</p>" : "") +
         '<div class="row" style="gap:10px;margin-top:20px"><button class="btn btn-ghost btn-block" data-action="sheet-close">' + t("common.cancel") + '</button><button class="btn btn-primary btn-block" data-action="sheet-save-subject">' + t("common.save") + "</button></div>";
     } else if (S.sheet.kind === "add-task") {
       var d = S.sheet.date || (S.calSel || isoDate(addDays(0)));
@@ -6497,6 +6609,11 @@
     S._busyAt[key] = now;
     return false;
   }
+  function keepSubjectSheet() {
+    if (!S.sheet) return;
+    var e = document.getElementById("sheetName");
+    if (e) S.sheet.name = e.value;
+  }
   function keepTaskSheet() {
     if (!S.sheet) return;
     var g = function (id) { var e = document.getElementById(id); return e ? e.value : undefined; };
@@ -6718,7 +6835,7 @@
     var wantsEx = intent === "exercise" || (!intent && ZAI.match(text) === "exercise" && !isFollowup(text));
     function bank(tier) {
       if (!th.docExBank) th.docExBank = {};
-      if (!th.docExBank[tier] || !th.docExBank[tier].length) th.docExBank[tier] = DocGen.exercises(d.text, tier);
+      if (!th.docExBank[tier] || !th.docExBank[tier].length) th.docExBank[tier] = DocGen.exercises(d.text, tier, docLang(d));
       return th.docExBank[tier];
     }
     function serve(tier, idx) {
@@ -6751,7 +6868,7 @@
       th.lastAnswer = text;
       return { html: "<p><strong>" + esc(th.docEx.q) + "</strong></p>" + (th.docEx.a ? "<p>" + (en ? "The document says: " : "El documento dice: ") + "“" + esc(th.docEx.a) + "”</p>" : "") + '<p class="ai-followup">' + (en ? "You wrote: “" + esc(text.slice(0, 140)) + "”. Compare it with the passage above." : "Escribiste: «" + esc(text.slice(0, 140)) + "». Compáralo con el fragmento de arriba.") + "</p>", tutor: true };
     }
-    return DocGen.answer(d.text, text);
+    return DocGen.answer(d.text, text, docLang(d));
   }
   function aiRespond(text, intent) {
     AI_TYPING = true; render(true);
@@ -7024,7 +7141,7 @@
     var c = { id: uid(), contextId: d.subjectId, docId: d.id, updated: Date.now(),
       title: { es: L(d.title), en: L(d.title) }, messages: [] };
     var th = ensureThread(c); th.docId = d.id; th.subjectId = d.subjectId;
-    var ex = DocGen.exercises(d.text, "med");
+    var ex = DocGen.exercises(d.text, "med", docLang(d));
     th.docExercises = ex; th.docExIdx = 0; th.docExTier = "med";
     th.exercise = null;
     DB.conversations.push(c);
@@ -7169,8 +7286,9 @@
       case "add-subject":
         if (DB.subjects.length >= planLimit("subjects")) { openUpgrade("subjects"); break; }
         S.sheet = { kind: "add-subject" }; render(true); break;
-      case "sheet-icon": S.sheet.icon = d.v; render(true); break;
-      case "sheet-color": S.sheet.color = d.v; render(true); break;
+      case "sheet-icon": keepSubjectSheet(); S.sheet.icon = d.v; render(true); break;
+      case "sheet-color": keepSubjectSheet(); S.sheet.color = d.v; render(true); break;
+      case "sheet-studylang": keepSubjectSheet(); S.sheet.studyLang = d.v || null; render(true); break;
       case "sheet-save-subject": saveSubject(); break;
       case "add-material": S.addType = null; S.addFile = null; S.addPick = null; go("addMaterial"); break;
       case "add-to-subject": case "add-type":
@@ -7498,14 +7616,15 @@
   // flashcards ni test, sin documento de ejemplo de otra materia. Hasta que
   // el usuario suba su primer archivo, no hay forma de saber qué le falta
   // por estudiar — así que no se lo inventamos con datos de otra materia.
-  function makeSubject(name, ic, color) {
+  function makeSubject(name, ic, color, studyLang) {
     var base = {
       id: uid(), name: { es: name, en: name }, icon: ic || "book", color: color || "#5A54C9",
       mastery: 0, testsTaken: 0, lastSessionDays: 0,
       weak: { es: [], en: [] },
       doc: emptySubjectDoc(name), extraDocs: [],
       flashcards: [], quiz: [],
-      ai: { es: {}, en: {} }
+      ai: { es: {}, en: {} },
+      studyLang: studyLang || null // "it"/"fr"/"en"/"pt" si es una materia de idioma
     };
     DB.subjects.push(base); DB.reviewsDueBySubject[base.id] = 0;
     persist("subjects"); persist("state");
@@ -7514,7 +7633,7 @@
   function saveSubject() {
     var name = ((document.getElementById("sheetName") || {}).value || "").trim();
     if (!name) { fieldError("sheetName", t("err.subjectName")); return; }
-    var ns = makeSubject(name, S.sheet.icon || "book", S.sheet.color || "#5A54C9");
+    var ns = makeSubject(name, S.sheet.icon || "book", S.sheet.color || "#5A54C9", S.sheet.studyLang || null);
     DB.currentSubjectId = ns.id;
     persist("state");
     S.sheet = null; S.subjTab = "docs"; S.screen = "subject"; render();
