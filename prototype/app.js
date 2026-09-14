@@ -5750,6 +5750,35 @@
     pt: "Não consegui traduzir isso agora (problema de ligação com o tradutor). Tenta novamente daqui a pouco."
   };
 
+  // Idiomas de materia que no tienen plantillas propias de la IA (gallego, catalán, euskera):
+  // en vez de contestar siempre en español, traducimos la respuesta generada con el traductor real.
+  var CO_OFFICIAL_LANGS = {};
+  LANG_SUBJ.forEach(function (o) { if (o.coOfficial) CO_OFFICIAL_LANGS[o.v] = 1; });
+  function htmlToPlainText(html) {
+    return String(html || "")
+      .replace(/<li[^>]*>/gi, "• ")
+      .replace(/<\/(p|li|h[1-6]|div|ul|ol)>/gi, "\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+  function mmTranslateText(text, src, tgt) {
+    var url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text) + "&langpair=" + src + "|" + tgt;
+    return fetch(url).then(function (res) { return res.json(); }).then(function (data) {
+      var out = data && data.responseData && data.responseData.translatedText;
+      if (!out || /^(INVALID|MYMEMORY WARNING|PLEASE SELECT)/i.test(out)) throw new Error("bad-translation");
+      return out;
+    });
+  }
+  function translateAiReplyHtml(html, tgt) {
+    var plain = htmlToPlainText(html);
+    if (!plain) return Promise.resolve(html);
+    return mmTranslateText(plain, "es", tgt).then(function (out) {
+      return "<p>" + esc(out).replace(/\n/g, "<br>") + "</p>";
+    });
+  }
+
   function materialFor(subjectId, docId) {
     var d = docId ? docById(docId) : null;
     if (d && docHasText(d)) {
@@ -5798,6 +5827,14 @@
       try { r = ZAI.ask(o.text, { intent: o.intent, contextId: o.contextId }); }
       finally { DB.lang = prevLang; }
       r.demo = true;
+      // Gallego/catalán/euskera no tienen plantillas propias: traducimos la respuesta
+      // (generada en español) con el traductor real para que la IA "hable" en ese idioma.
+      if (CO_OFFICIAL_LANGS[effLang] && r.html) {
+        return translateAiReplyHtml(r.html, effLang).then(function (out) {
+          r.html = out;
+          return r;
+        }).catch(function () { return r; });
+      }
       return this._wait(r, 620);
     },
     podcastScript: function (o) {
