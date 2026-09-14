@@ -3662,8 +3662,8 @@
           '<button data-action="attach-pick" data-type="pdf">' + icon("doc", 15) + t("ai.attachPdf") + "</button>" +
           '<button data-action="attach-pick" data-type="doc">' + icon("notes", 15) + t("ai.attachDoc") + "</button>" +
           '<button data-action="attach-pick" data-type="image">' + icon("image", 15) + t("ai.attachImage") + "</button>" +
-          '<input type="file" id="aiFileInput" style="display:none">' +
         "</div>" : "") +
+        '<input type="file" id="aiFileInput" style="display:none">' +
         '<textarea id="aiInput" rows="1" placeholder="' + t("ai.placeholder") + '"></textarea><button class="chat-send" data-action="ai-send">' + icon("send", 17) + "</button></div>" +
       '<div class="chat-note">' + t(aiIsReal() ? "ai.realNote" : "ai.demoNote") + "</div></div>";
   };
@@ -5334,7 +5334,13 @@
     }
     var afi = document.getElementById("aiFileInput");
     if (afi) afi.addEventListener("change", function () {
-      if (afi.files && afi.files[0]) { AI_ATTACH = { name: afi.files[0].name, type: "pdf" }; S.attachMenu = 0; render(true); }
+      var f = afi.files && afi.files[0];
+      if (!f) return;
+      var ty = /^image\//.test(f.type) || /\.(jpe?g|png|gif|webp|heic)$/i.test(f.name) ? "image"
+        : /pdf/.test(f.type) || /\.pdf$/i.test(f.name) ? "pdf" : "doc";
+      AI_ATTACH = { name: f.name, type: ty, file: f };
+      S.attachMenu = 0; render(true);
+      setTimeout(function () { var ti = document.getElementById("aiInput"); if (ti) ti.focus(); }, 30);
     });
     var pfi = document.getElementById("photoInput");
     if (pfi) pfi.addEventListener("change", function () {
@@ -6075,12 +6081,14 @@
       case "attach-menu": S.attachMenu = !S.attachMenu; render(true); break;
       case "attach-pick":
         S.attachMenu = 0;
-        var an = d.type === "image" ? (DB.lang === "en" ? "Notes photo.jpg" : "Foto apuntes.jpg")
-          : d.type === "doc" ? L(cur().name) + (DB.lang === "en" ? " notes.docx" : " apuntes.docx")
-          : L(cur().doc.title);
-        AI_ATTACH = { name: an, type: d.type };
         render(true);
-        setTimeout(function () { var ti = document.getElementById("aiInput"); if (ti) ti.focus(); }, 30);
+        setTimeout(function () {
+          var fi = document.getElementById("aiFileInput");
+          if (!fi) return;
+          fi.accept = d.type === "image" ? "image/*" : d.type === "doc" ? ".doc,.docx,.txt,.rtf,.odt" : ".pdf";
+          fi.value = "";
+          fi.click();
+        }, 30);
         break;
       case "attach-clear": AI_ATTACH = null; render(true); break;
       case "subj-tab": S.subjTab = d.tab; render(true); break;
