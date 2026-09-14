@@ -77,6 +77,9 @@
   // salen en ese idioma aunque el idioma de la app sea otro.
   var APP_LANGS = ["es", "en", "it", "fr", "pt"];
   var LANG_SUBJ = [
+    { v: "gl", flag: "🇪🇸", es: "Gallego", en: "Galician", it: "Galiziano", fr: "Galicien", pt: "Galego", coOfficial: true },
+    { v: "ca", flag: "🇪🇸", es: "Catalán", en: "Catalan", it: "Catalano", fr: "Catalan", pt: "Catalão", coOfficial: true },
+    { v: "eu", flag: "🇪🇸", es: "Euskera", en: "Basque", it: "Basco", fr: "Basque", pt: "Basco", coOfficial: true },
     { v: "it", flag: "🇮🇹", es: "Italiano", en: "Italian", it: "Italiano", fr: "Italien", pt: "Italiano" },
     { v: "fr", flag: "🇫🇷", es: "Francés", en: "French", it: "Francese", fr: "Français", pt: "Francês" },
     { v: "en", flag: "🇬🇧", es: "Inglés", en: "English", it: "Inglese", fr: "Anglais", pt: "Inglês" },
@@ -6932,7 +6935,7 @@
         '<label class="label" style="margin-top:16px">' + t("subj.langQ") + '</label>' +
         '<div class="chip-row">' +
           '<button class="chip-sel ' + (!S.sheet.studyLang ? "on" : "") + '" data-action="sheet-studylang" data-v="">' + t("subj.langNo") + "</button>" +
-          LANG_SUBJ.map(function (o) { return '<button class="chip-sel ' + (S.sheet.studyLang === o.v ? "on" : "") + '" data-action="sheet-studylang" data-v="' + o.v + '">' + o.flag + " " + (o[DB.lang] || o.es) + "</button>"; }).join("") +
+          LANG_SUBJ.filter(function (o) { return !o.coOfficial || DB.lang === "es"; }).map(function (o) { return '<button class="chip-sel ' + (S.sheet.studyLang === o.v ? "on" : "") + '" data-action="sheet-studylang" data-v="' + o.v + '">' + o.flag + " " + (o[DB.lang] || o.es) + "</button>"; }).join("") +
         "</div>" +
         (S.sheet.studyLang ? '<p class="txt-sm txt-muted" style="margin-top:8px">' + t("subj.langNote", { lang: langSubjName(S.sheet.studyLang) }) + "</p>" : "") +
         '<div class="row" style="gap:10px;margin-top:20px"><button class="btn btn-ghost btn-block" data-action="sheet-close">' + t("common.cancel") + '</button><button class="btn btn-primary btn-block" data-action="sheet-save-subject">' + t("common.save") + "</button></div>";
@@ -8173,7 +8176,7 @@
       doc: emptySubjectDoc(name), extraDocs: [],
       flashcards: [], quiz: [],
       ai: { es: {}, en: {} },
-      studyLang: studyLang || null // "it"/"fr"/"en"/"pt" si es una materia de idioma
+      studyLang: studyLang || null // "gl"/"ca"/"eu"/"it"/"fr"/"en"/"pt" si es una materia de idioma
     };
     DB.subjects.push(base); DB.reviewsDueBySubject[base.id] = 0;
     persist("subjects"); persist("state");
