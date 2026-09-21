@@ -6865,7 +6865,7 @@
     provider: "gemini",                          // motor de IA (marca visible: "Zynqora AI")
     ttsProvider: "gemini",                       // motor de voz
     webSearch: true,                             // Google Search grounding en modo real
-    useCloudAI: false,                           // IA real (Gemini) desactivada por ahora a propósito: usamos el motor local aunque haya cuenta/nube activada
+    useCloudAI: true,                            // IA real (Gemini) activada — llama a supabaseUrl + /functions/v1/zynqora-ai
     // --- FASE F: backend de Supabase (cuentas + guardado en la nube) ---
     supabaseUrl: lsGet("zynqora.supabaseUrl", "https://ojggkovfsioriwnwzgce.supabase.co"),
     supabaseAnonKey: lsGet("zynqora.supabaseAnonKey", "sb_publishable_9z3AIGDtYQwVEGIXAQ2jKg_YdecvjpT"), // clave pública (la RLS protege los datos)
