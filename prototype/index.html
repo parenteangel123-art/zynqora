@@ -903,19 +903,41 @@
   .pres-slide { aspect-ratio: 16 / 10; padding: 30px; display: flex; flex-direction: column; overflow: hidden; position: relative; }
   .pres-slide.anim { animation: slideIn .42s var(--ease-out); }
   @keyframes slideIn { from { opacity: 0; transform: translateY(10px) scale(.985); } }
-  .pres-slide .ps-kicker { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; opacity: .55; animation: psRise .5s var(--ease-out) both .04s; }
-  .pres-slide .ps-title { font-size: 25px; font-weight: 600; letter-spacing: -.025em; line-height: 1.12; margin-top: 10px; text-wrap: balance; animation: psRise .5s var(--ease-out) both .1s; }
-  .pres-slide .ps-sub { font-size: 13.5px; opacity: .78; margin-top: 8px; line-height: 1.5; animation: psRise .5s var(--ease-out) both .16s; }
-  .pres-slide .ps-body { margin-top: auto; animation: psRise .5s var(--ease-out) both .2s; }
+  .pres-slide .ps-kicker { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; opacity: .55; position: relative; z-index: 2; animation: psRise .5s var(--ease-out) both .04s; }
+  .pres-slide .ps-kdot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .pres-slide .ps-title { font-size: 25px; font-weight: 600; letter-spacing: -.025em; line-height: 1.12; margin-top: 10px; text-wrap: balance; position: relative; z-index: 2; animation: psRise .5s var(--ease-out) both .1s; }
+  .pres-slide .ps-sub { font-size: 13.5px; opacity: .78; margin-top: 8px; line-height: 1.5; position: relative; z-index: 2; animation: psRise .5s var(--ease-out) both .16s; }
+  .pres-slide .ps-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; position: relative; z-index: 2; animation: psRise .5s var(--ease-out) both .16s; }
+  .pres-slide .ps-tag { font-size: 10.5px; font-weight: 600; padding: 4px 11px; border-radius: 999px; background: rgba(127,127,127,.14); }
+  .pres-slide .ps-body { margin-top: auto; position: relative; z-index: 2; animation: psRise .5s var(--ease-out) both .2s; }
   @keyframes psRise { from { opacity: 0; transform: translateY(8px); } }
   .pres-slide .ps-list { display: flex; flex-direction: column; gap: 10px; }
-  .pres-slide .ps-list .pli { display: flex; gap: 11px; align-items: flex-start; font-size: 13px; line-height: 1.4; }
+  .pres-slide .ps-list .pli { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; line-height: 1.4; }
+  .pres-slide .ps-list .pli .pli-n { font-family: var(--mono); font-size: 9px; opacity: .4; flex-shrink: 0; width: 12px; padding-top: 6px; font-style: normal; }
   .pres-slide .ps-list .pli .pli-i { width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0; display: grid; place-items: center; background: currentColor; }
   .pres-slide .ps-list .pli .pli-i svg { width: 15px; height: 15px; opacity: 1; }
-  .pres-slide .ps-hero { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: 168px; height: 168px; opacity: .9; pointer-events: none; }
+  .pres-slide .ps-list .pli .pli-i.pli-ok { background: rgba(31,162,92,.18) !important; color: #1fa25c !important; }
+  .pres-slide .ps-hero { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: 168px; height: 168px; opacity: .9; pointer-events: none; z-index: 1; }
+  .pres-slide:has(.ps-hero) .ps-kicker, .pres-slide:has(.ps-hero) .ps-title, .pres-slide:has(.ps-hero) .ps-tags, .pres-slide:has(.ps-hero) .ps-sub { max-width: calc(100% - 120px); }
   .pres-slide .ps-hero.faint { opacity: .12; width: 220px; height: 220px; right: -20px; }
   .pres-slide .ps-fig { display: grid; place-items: center; margin: 6px 0; }
   .pres-slide .ps-fig svg { width: 100%; max-width: 260px; height: 120px; }
+  .pres-slide .ps-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
+  .pres-slide .ps-bg::before, .pres-slide .ps-bg::after { content: ""; position: absolute; border-radius: 50%; filter: blur(46px); background: var(--accent); }
+  .pres-slide .ps-bg::before { width: 240px; height: 240px; right: -70px; top: -80px; opacity: .08; }
+  .pres-slide .ps-bg::after { width: 200px; height: 200px; left: -60px; bottom: -70px; opacity: .05; }
+  .pres-slide[data-st="0"] .ps-bg { display: none; }
+  .pres-slide[data-st="1"] .ps-bg::before, .pres-slide[data-st="1"] .ps-bg::after { background: var(--ink); opacity: .035; }
+  .pres-slide[data-st="2"] .ps-bg::before, .pres-slide[data-st="2"] .ps-bg::after { background: #8c6e3c; opacity: .14; }
+  .pres-slide[data-st="3"] .ps-bg::before, .pres-slide[data-st="3"] .ps-bg::after { background: #fff; opacity: .16; }
+  .pres-slide[data-st="4"] .ps-bg::before, .pres-slide[data-st="4"] .ps-bg::after { background: var(--accent); opacity: .22; }
+  .pres-slide .ps-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(127,127,127,.16); font-size: 9.5px; opacity: .55; position: relative; z-index: 2; }
+  .pres-slide .ps-brand { display: flex; align-items: center; gap: 4px; font-weight: 700; letter-spacing: .03em; }
+  .pres-slide .ps-brand svg { width: 11px; height: 11px; }
+  .pres-slide .ps-pageno { font-family: var(--mono); }
+  .ps-quote { position: relative; padding: 16px 18px 14px 42px; border-left: 3px solid var(--accent); background: rgba(127,127,127,.07); border-radius: 0 var(--r-md) var(--r-md) 0; }
+  .ps-quote p { font-size: 15px; line-height: 1.55; font-style: italic; margin: 0; }
+  .ps-quote .ps-qmark { position: absolute; left: 10px; top: 0; font-size: 34px; line-height: 1; font-style: normal; opacity: .32; font-family: Georgia, serif; }
   .pres-tl { display: flex; flex-direction: column; }
   .pres-tl .ptl { display: flex; gap: 13px; padding: 6px 0; }
   .pres-tl .ptl .ptl-rail { display: flex; flex-direction: column; align-items: center; }
@@ -923,12 +945,17 @@
   .pres-tl .ptl .ptl-y b { color: var(--surface); }
   .pres-tl .ptl .ptl-line { width: 2px; flex: 1; background: currentColor; opacity: .3; margin: 3px 0; min-height: 6px; }
   .pres-tl .ptl .ptl-t { font-size: 12.5px; line-height: 1.4; padding-top: 1px; }
-  .pres-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .pres-cmp .pcm { border: 1px solid currentColor; border-radius: var(--r-md); padding: 12px; }
+  .pres-cmp { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pres-cmp .pcm { position: relative; border: 1px solid currentColor; border-radius: var(--r-md); padding: 14px 12px 12px; }
+  .pres-cmp .pcm-badge { position: absolute; top: -8px; left: -8px; width: 20px; height: 20px; border-radius: 6px; background: currentColor; display: grid; place-items: center; font-size: 10px; font-weight: 800; box-shadow: 0 0 0 2px var(--surface); }
+  .pres-cmp .pcm-badge b { color: var(--surface); font-style: normal; }
   .pres-cmp .pcm h4 { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
   .pres-cmp .pcm p { font-size: 11.5px; line-height: 1.45; opacity: .85; }
-  .pres-hl { font-size: 15px; line-height: 1.4; font-weight: 500; }
-  .pres-hl .hl-big { font-size: 40px; font-weight: 700; letter-spacing: -.03em; display: block; margin-bottom: 6px; }
+  .pres-cmp::after { content: "VS"; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 26px; height: 26px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border-2); display: grid; place-items: center; font-size: 9px; font-weight: 800; letter-spacing: .04em; color: var(--muted); z-index: 2; }
+  .pres-slide[data-st="3"] .pres-cmp::after, .pres-slide[data-st="4"] .pres-cmp::after { background: rgba(0,0,0,.35); border-color: rgba(255,255,255,.25); color: #fff; }
+  .ps-hl { display: flex; align-items: center; gap: 16px; }
+  .ps-hl .hl-ring { width: 74px; height: 74px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); border: 2px solid currentColor; font-size: 25px; font-weight: 800; letter-spacing: -.02em; }
+  .ps-hl .hl-list { flex: 1; min-width: 0; }
 
   .pres-slide[data-st="0"] { background: var(--surface); color: var(--ink); }
   .pres-slide[data-st="0"] .ps-list .pli .pli-i { background: var(--accent-soft); color: var(--accent); }
@@ -948,6 +975,12 @@
   .pres-slide[data-st="4"] { background: #14151a; color: #e9eaf0; }
   .pres-slide[data-st="4"] .ps-list .pli .pli-i { background: rgba(255,255,255,.1); color: #cfd1dc; }
   .pres-slide[data-st="4"] .ps-kicker { color: var(--accent); opacity: 1; }
+  .pres-slide[data-st="3"] .ps-tag, .pres-slide[data-st="4"] .ps-tag { background: rgba(255,255,255,.16); }
+  .pres-slide[data-st="3"] .hl-ring, .pres-slide[data-st="4"] .hl-ring { background: rgba(255,255,255,.16); color: #fff; }
+  .pres-slide[data-st="3"] .ps-quote, .pres-slide[data-st="4"] .ps-quote { background: rgba(255,255,255,.08); border-left-color: rgba(255,255,255,.6); }
+  .pres-slide[data-st="3"] .pcm-badge, .pres-slide[data-st="4"] .pcm-badge { box-shadow: 0 0 0 2px rgba(0,0,0,.25); }
+  .pres-slide[data-st="3"] .pcm-badge b, .pres-slide[data-st="4"] .pcm-badge b { color: #1a1a2e; }
+  .pres-slide[data-st="3"] .ps-foot, .pres-slide[data-st="4"] .ps-foot { border-top-color: rgba(255,255,255,.16); }
 
   .pres-progress { display: flex; gap: 4px; margin-top: 12px; }
   .pres-progress i { flex: 1; height: 3px; border-radius: 999px; background: var(--border); overflow: hidden; }
@@ -986,6 +1019,8 @@
     .pres-slide { padding: 22px; }
     .pres-slide .ps-title { font-size: 21px; }
     .pres-slide .ps-hero:not(.faint) { width: 96px; height: 96px; opacity: .8; }
+    .pres-slide:has(.ps-hero) .ps-kicker, .pres-slide:has(.ps-hero) .ps-title, .pres-slide:has(.ps-hero) .ps-tags, .pres-slide:has(.ps-hero) .ps-sub { max-width: calc(100% - 70px); }
+    .ps-tag { font-size: 9.5px; padding: 3px 9px; }
     .pres-thumbs { display: none; }
     .cfg-cards { grid-template-columns: 1fr; }
     .cfg-card { flex-direction: row; justify-content: flex-start; gap: 10px; text-align: left; padding: 12px; }
@@ -2504,7 +2539,7 @@
       "plans.monthly": "Mensual", "plans.annual": "Anual",
       "plans.perMonth": "/mes", "plans.perYear": "/año", "plans.free0": "0 €",
       "plans.save": "Ahorras {pct}% frente al pago mensual",
-      "plans.popular": "Más popular", "plans.proTag": "Experiencia IA avanzada",
+      "plans.popular": "Más popular", "plans.proTag": "Para quien no quiere ponerse límites",
       "plans.proSub": "Para estudiantes que quieren aprovechar Zynqora al máximo",
       "plans.current": "Tu plan actual", "plans.choose": "Elegir {plan}",
       "plans.downgrade": "Cambiar a Free", "plans.cta": "Actualizar", "plans.manage": "Gestionar plan",
@@ -2576,7 +2611,7 @@
       "pol.s13t": "Uso de los datos", "pol.s13b": "Los datos se utilizan para prestar el servicio, mejorarlo, dar soporte y cumplir obligaciones legales. No se venden a terceros.",
       "pol.s14t": "Seguridad", "pol.s14b": "Zynqora aplica medidas técnicas y organizativas razonables para proteger la información. Ningún sistema es completamente infalible.",
       "pol.s15t": "Proveedores externos", "pol.s15b": "Zynqora se apoya en proveedores de infraestructura, inteligencia artificial y analítica necesarios para prestar el servicio, sujetos a los acuerdos de tratamiento de datos correspondientes.",
-      "pol.s16t": "Derechos del usuario", "pol.s16b": "El usuario puede acceder, rectificar, eliminar y portar sus datos, así como oponerse o limitar determinados tratamientos, según la normativa aplicable.",
+      "pol.s16t": "Derechos del usuario", "pol.s16b": "El usuario puede acceder, rectificar, eliminar y portar sus datos, así como oponerse o limitar determinados tratamientos, según la normativa aplicable, escribiendo a ZynqOraAIsolver@gmail.com.",
       "pol.s17t": "Archivos y contenido del usuario", "pol.s17b": "El usuario puede subir materiales de estudio (PDF, documentos, imágenes o texto) para utilizar las funciones de Zynqora. El usuario declara tener derecho a utilizar dichos materiales. Para prestar el servicio, los archivos podrán ser procesados por los proveedores tecnológicos necesarios cuando la arquitectura real lo requiera. Las condiciones detalladas se recogerán en la Política de Privacidad.",
       "pol.s18t": "Zynqora AI y contenido generado", "pol.s18b": "Zynqora AI ofrece apoyo educativo. Sus respuestas se generan mediante sistemas de inteligencia artificial y pueden contener errores. El usuario debe verificar la información importante. Zynqora no garantiza que una respuesta sea siempre correcta y no sustituye a profesores, profesionales u otras fuentes oficiales cuando corresponda.",
       "pol.s19t": "Uso responsable", "pol.s19b": "El usuario se compromete a no usar Zynqora para fines ilícitos, para infringir derechos de terceros ni para generar contenido dañino.",
@@ -2586,7 +2621,7 @@
       "pol.s23t": "Suspensión de cuentas", "pol.s23b": "Zynqora puede suspender o restringir cuentas que incumplan estas condiciones o que pongan en riesgo el servicio o a otros usuarios.",
       "pol.s24t": "Modificación del servicio", "pol.s24b": "Zynqora puede añadir, modificar o retirar funciones para mejorar el producto, avisando de los cambios relevantes.",
       "pol.s25t": "Modificación de las políticas", "pol.s25b": "Estas condiciones pueden actualizarse. Los cambios sustanciales se comunicarán con una antelación razonable.",
-      "pol.s26t": "Atención al cliente", "pol.s26b": "El usuario puede contactar con el equipo de soporte a través de los canales indicados dentro de la aplicación.",
+      "pol.s26t": "Atención al cliente", "pol.s26b": "El usuario puede contactar con el equipo de soporte a través de los canales indicados dentro de la aplicación, o escribiendo a ZynqOraAIsolver@gmail.com.",
       "pol.s27t": "Legislación aplicable", "pol.s27b": "Estas condiciones se regirán por la legislación que resulte aplicable según el domicilio del usuario y la normativa de consumo vigente."
     },
     en: {
@@ -2599,7 +2634,7 @@
       "plans.monthly": "Monthly", "plans.annual": "Annual",
       "plans.perMonth": "/mo", "plans.perYear": "/yr", "plans.free0": "€0",
       "plans.save": "Save {pct}% vs paying monthly",
-      "plans.popular": "Most popular", "plans.proTag": "Advanced AI experience",
+      "plans.popular": "Most popular", "plans.proTag": "For those who don't want limits",
       "plans.proSub": "For students who want to get the most out of Zynqora",
       "plans.current": "Your current plan", "plans.choose": "Choose {plan}",
       "plans.downgrade": "Switch to Free", "plans.cta": "Upgrade", "plans.manage": "Manage plan",
@@ -2671,7 +2706,7 @@
       "pol.s13t": "Use of data", "pol.s13b": "Data is used to provide the service, improve it, give support and meet legal obligations. It is not sold to third parties.",
       "pol.s14t": "Security", "pol.s14b": "Zynqora applies reasonable technical and organisational measures to protect information. No system is completely infallible.",
       "pol.s15t": "Third-party providers", "pol.s15b": "Zynqora relies on infrastructure, AI and analytics providers needed to run the service, subject to the relevant data-processing agreements.",
-      "pol.s16t": "User rights", "pol.s16b": "You can access, rectify, delete and port your data, and object to or restrict certain processing, in accordance with applicable law.",
+      "pol.s16t": "User rights", "pol.s16b": "You can access, rectify, delete and port your data, and object to or restrict certain processing, in accordance with applicable law, by writing to ZynqOraAIsolver@gmail.com.",
       "pol.s17t": "User files and content", "pol.s17b": "You can upload study materials (PDF, documents, images or text) to use Zynqora's features. You declare that you have the right to use those materials. To provide the service, files may be processed by the necessary technology providers when the real architecture requires it. Detailed terms will be set out in the Privacy Policy.",
       "pol.s18t": "Zynqora AI and generated content", "pol.s18b": "Zynqora AI provides educational support. Its answers are generated by artificial-intelligence systems and may contain errors. You should verify important information. Zynqora does not guarantee that an answer is always correct and does not replace teachers, professionals or other official sources where relevant.",
       "pol.s19t": "Responsible use", "pol.s19b": "You agree not to use Zynqora for unlawful purposes, to infringe third-party rights or to generate harmful content.",
@@ -2681,7 +2716,7 @@
       "pol.s23t": "Account suspension", "pol.s23b": "Zynqora may suspend or restrict accounts that breach these terms or that put the service or other users at risk.",
       "pol.s24t": "Changes to the service", "pol.s24b": "Zynqora may add, change or remove features to improve the product, notifying users of relevant changes.",
       "pol.s25t": "Changes to the policies", "pol.s25b": "These terms may be updated. Substantial changes will be communicated with reasonable notice.",
-      "pol.s26t": "Customer support", "pol.s26b": "You can contact the support team through the channels indicated within the app.",
+      "pol.s26t": "Customer support", "pol.s26b": "You can contact the support team through the channels indicated within the app, or by emailing ZynqOraAIsolver@gmail.com.",
       "pol.s27t": "Governing law", "pol.s27b": "These terms are governed by the law applicable based on your place of residence and the consumer regulations in force."
     },
     it: {
@@ -2694,7 +2729,7 @@
       "plans.monthly": "Mensile", "plans.annual": "Annuale",
       "plans.perMonth": "/mese", "plans.perYear": "/anno", "plans.free0": "0 €",
       "plans.save": "Risparmi il {pct}% rispetto al pagamento mensile",
-      "plans.popular": "Più popolare", "plans.proTag": "Esperienza IA avanzata",
+      "plans.popular": "Più popolare", "plans.proTag": "Per chi non vuole limiti",
       "plans.proSub": "Per studenti che vogliono sfruttare Zynqora al massimo",
       "plans.current": "Il tuo piano attuale", "plans.choose": "Scegli {plan}",
       "plans.downgrade": "Passa a Free", "plans.cta": "Passa a un piano superiore", "plans.manage": "Gestisci piano",
@@ -2766,7 +2801,7 @@
       "pol.s13t": "Uso dei dati", "pol.s13b": "I dati vengono utilizzati per fornire il servizio, migliorarlo, offrire assistenza e adempiere agli obblighi legali. Non vengono venduti a terzi.",
       "pol.s14t": "Sicurezza", "pol.s14b": "Zynqora applica misure tecniche e organizzative ragionevoli per proteggere le informazioni. Nessun sistema è completamente infallibile.",
       "pol.s15t": "Fornitori esterni", "pol.s15b": "Zynqora si appoggia a fornitori di infrastruttura, intelligenza artificiale e analisi necessari per fornire il servizio, soggetti ai relativi accordi sul trattamento dei dati.",
-      "pol.s16t": "Diritti dell'utente", "pol.s16b": "L'utente può accedere, rettificare, eliminare e portare i propri dati, nonché opporsi o limitare determinati trattamenti, secondo la normativa applicabile.",
+      "pol.s16t": "Diritti dell'utente", "pol.s16b": "L'utente può accedere, rettificare, eliminare e portare i propri dati, nonché opporsi o limitare determinati trattamenti, secondo la normativa applicabile, scrivendo a ZynqOraAIsolver@gmail.com.",
       "pol.s17t": "File e contenuti dell'utente", "pol.s17b": "L'utente può caricare materiali di studio (PDF, documenti, immagini o testo) per utilizzare le funzioni di Zynqora. L'utente dichiara di avere il diritto di utilizzare tali materiali. Per fornire il servizio, i file potranno essere elaborati dai fornitori tecnologici necessari quando l'architettura reale lo richieda. Le condizioni dettagliate saranno riportate nell'Informativa sulla Privacy.",
       "pol.s18t": "Zynqora AI e contenuti generati", "pol.s18b": "Zynqora AI offre supporto educativo. Le sue risposte sono generate tramite sistemi di intelligenza artificiale e possono contenere errori. L'utente deve verificare le informazioni importanti. Zynqora non garantisce che una risposta sia sempre corretta e non sostituisce insegnanti, professionisti o altre fonti ufficiali quando pertinente.",
       "pol.s19t": "Uso responsabile", "pol.s19b": "L'utente si impegna a non usare Zynqora per scopi illeciti, per violare i diritti di terzi né per generare contenuti dannosi.",
@@ -2776,7 +2811,7 @@
       "pol.s23t": "Sospensione degli account", "pol.s23b": "Zynqora può sospendere o limitare account che violano queste condizioni o che mettono a rischio il servizio o altri utenti.",
       "pol.s24t": "Modifica del servizio", "pol.s24b": "Zynqora può aggiungere, modificare o rimuovere funzioni per migliorare il prodotto, comunicando i cambiamenti rilevanti.",
       "pol.s25t": "Modifica delle politiche", "pol.s25b": "Queste condizioni possono essere aggiornate. Le modifiche sostanziali saranno comunicate con un ragionevole preavviso.",
-      "pol.s26t": "Assistenza clienti", "pol.s26b": "L'utente può contattare il team di assistenza tramite i canali indicati all'interno dell'app.",
+      "pol.s26t": "Assistenza clienti", "pol.s26b": "L'utente può contattare il team di assistenza tramite i canali indicati all'interno dell'app, oppure scrivendo a ZynqOraAIsolver@gmail.com.",
       "pol.s27t": "Legge applicabile", "pol.s27b": "Queste condizioni sono regolate dalla legge applicabile in base al domicilio dell'utente e dalla normativa sui consumatori in vigore."
     },
     fr: {
@@ -2789,7 +2824,7 @@
       "plans.monthly": "Mensuel", "plans.annual": "Annuel",
       "plans.perMonth": "/mois", "plans.perYear": "/an", "plans.free0": "0 €",
       "plans.save": "Économise {pct}% par rapport au paiement mensuel",
-      "plans.popular": "Le plus populaire", "plans.proTag": "Expérience IA avancée",
+      "plans.popular": "Le plus populaire", "plans.proTag": "Pour qui ne veut aucune limite",
       "plans.proSub": "Pour les étudiants qui veulent tirer le meilleur de Zynqora",
       "plans.current": "Ton forfait actuel", "plans.choose": "Choisir {plan}",
       "plans.downgrade": "Passer à Free", "plans.cta": "Mettre à niveau", "plans.manage": "Gérer le forfait",
@@ -2861,7 +2896,7 @@
       "pol.s13t": "Utilisation des données", "pol.s13b": "Les données sont utilisées pour fournir le service, l'améliorer, offrir un support et respecter les obligations légales. Elles ne sont pas vendues à des tiers.",
       "pol.s14t": "Sécurité", "pol.s14b": "Zynqora applique des mesures techniques et organisationnelles raisonnables pour protéger les informations. Aucun système n'est totalement infaillible.",
       "pol.s15t": "Prestataires externes", "pol.s15b": "Zynqora s'appuie sur des prestataires d'infrastructure, d'intelligence artificielle et d'analyse nécessaires pour fournir le service, soumis aux accords de traitement des données correspondants.",
-      "pol.s16t": "Droits de l'utilisateur", "pol.s16b": "L'utilisateur peut accéder à ses données, les rectifier, les supprimer et les porter, ainsi que s'opposer à certains traitements ou les limiter, conformément à la réglementation applicable.",
+      "pol.s16t": "Droits de l'utilisateur", "pol.s16b": "L'utilisateur peut accéder à ses données, les rectifier, les supprimer et les porter, ainsi que s'opposer à certains traitements ou les limiter, conformément à la réglementation applicable, en écrivant à ZynqOraAIsolver@gmail.com.",
       "pol.s17t": "Fichiers et contenu de l'utilisateur", "pol.s17b": "L'utilisateur peut mettre en ligne du contenu d'étude (PDF, documents, images ou texte) pour utiliser les fonctionnalités de Zynqora. L'utilisateur déclare avoir le droit d'utiliser ce contenu. Pour fournir le service, les fichiers pourront être traités par les prestataires technologiques nécessaires lorsque l'architecture réelle l'exigera. Les conditions détaillées seront précisées dans la Politique de confidentialité.",
       "pol.s18t": "Zynqora AI et contenu généré", "pol.s18b": "Zynqora AI offre un soutien éducatif. Ses réponses sont générées par des systèmes d'intelligence artificielle et peuvent contenir des erreurs. L'utilisateur doit vérifier les informations importantes. Zynqora ne garantit pas qu'une réponse soit toujours correcte et ne remplace pas les enseignants, professionnels ou autres sources officielles le cas échéant.",
       "pol.s19t": "Usage responsable", "pol.s19b": "L'utilisateur s'engage à ne pas utiliser Zynqora à des fins illicites, pour porter atteinte aux droits de tiers ni pour générer du contenu nuisible.",
@@ -2871,7 +2906,7 @@
       "pol.s23t": "Suspension des comptes", "pol.s23b": "Zynqora peut suspendre ou restreindre des comptes qui enfreignent ces conditions ou qui mettent en danger le service ou d'autres utilisateurs.",
       "pol.s24t": "Modification du service", "pol.s24b": "Zynqora peut ajouter, modifier ou retirer des fonctionnalités pour améliorer le produit, en informant des changements importants.",
       "pol.s25t": "Modification des politiques", "pol.s25b": "Ces conditions peuvent être mises à jour. Les changements substantiels seront communiqués avec un préavis raisonnable.",
-      "pol.s26t": "Service client", "pol.s26b": "L'utilisateur peut contacter l'équipe de support via les canaux indiqués dans l'application.",
+      "pol.s26t": "Service client", "pol.s26b": "L'utilisateur peut contacter l'équipe de support via les canaux indiqués dans l'application, ou en écrivant à ZynqOraAIsolver@gmail.com.",
       "pol.s27t": "Loi applicable", "pol.s27b": "Ces conditions sont régies par la loi applicable selon le lieu de résidence de l'utilisateur et la réglementation de consommation en vigueur."
     },
     pt: {
@@ -2884,7 +2919,7 @@
       "plans.monthly": "Mensal", "plans.annual": "Anual",
       "plans.perMonth": "/mês", "plans.perYear": "/ano", "plans.free0": "0 €",
       "plans.save": "Poupas {pct}% em relação ao pagamento mensal",
-      "plans.popular": "Mais popular", "plans.proTag": "Experiência de IA avançada",
+      "plans.popular": "Mais popular", "plans.proTag": "Para quem não quer limites",
       "plans.proSub": "Para estudantes que querem aproveitar a Zynqora ao máximo",
       "plans.current": "O teu plano atual", "plans.choose": "Escolher {plan}",
       "plans.downgrade": "Mudar para Free", "plans.cta": "Atualizar", "plans.manage": "Gerir plano",
@@ -2956,7 +2991,7 @@
       "pol.s13t": "Uso dos dados", "pol.s13b": "Os dados são utilizados para prestar o serviço, melhorá-lo, dar apoio e cumprir obrigações legais. Não são vendidos a terceiros.",
       "pol.s14t": "Segurança", "pol.s14b": "A Zynqora aplica medidas técnicas e organizativas razoáveis para proteger a informação. Nenhum sistema é completamente infalível.",
       "pol.s15t": "Fornecedores externos", "pol.s15b": "A Zynqora apoia-se em fornecedores de infraestrutura, inteligência artificial e análise necessários para prestar o serviço, sujeitos aos respetivos acordos de tratamento de dados.",
-      "pol.s16t": "Direitos do utilizador", "pol.s16b": "O utilizador pode aceder, retificar, eliminar e portar os seus dados, bem como opor-se ou limitar determinados tratamentos, de acordo com a legislação aplicável.",
+      "pol.s16t": "Direitos do utilizador", "pol.s16b": "O utilizador pode aceder, retificar, eliminar e portar os seus dados, bem como opor-se ou limitar determinados tratamentos, de acordo com a legislação aplicável, escrevendo para ZynqOraAIsolver@gmail.com.",
       "pol.s17t": "Ficheiros e conteúdo do utilizador", "pol.s17b": "O utilizador pode carregar materiais de estudo (PDF, documentos, imagens ou texto) para utilizar as funcionalidades da Zynqora. O utilizador declara ter o direito de utilizar esses materiais. Para prestar o serviço, os ficheiros poderão ser processados pelos fornecedores tecnológicos necessários quando a arquitetura real o exigir. As condições detalhadas constarão da Política de Privacidade.",
       "pol.s18t": "Zynqora AI e conteúdo gerado", "pol.s18b": "A Zynqora AI oferece apoio educativo. As suas respostas são geradas por sistemas de inteligência artificial e podem conter erros. O utilizador deve verificar informações importantes. A Zynqora não garante que uma resposta esteja sempre correta e não substitui professores, profissionais ou outras fontes oficiais quando pertinente.",
       "pol.s19t": "Uso responsável", "pol.s19b": "O utilizador compromete-se a não usar a Zynqora para fins ilícitos, para infringir direitos de terceiros nem para gerar conteúdo prejudicial.",
@@ -2966,7 +3001,7 @@
       "pol.s23t": "Suspensão de contas", "pol.s23b": "A Zynqora pode suspender ou restringir contas que violem estas condições ou que coloquem em risco o serviço ou outros utilizadores.",
       "pol.s24t": "Modificação do serviço", "pol.s24b": "A Zynqora pode adicionar, modificar ou remover funcionalidades para melhorar o produto, avisando sobre alterações relevantes.",
       "pol.s25t": "Modificação das políticas", "pol.s25b": "Estas condições podem ser atualizadas. As alterações substanciais serão comunicadas com uma antecedência razoável.",
-      "pol.s26t": "Apoio ao cliente", "pol.s26b": "O utilizador pode contactar a equipa de apoio através dos canais indicados dentro da aplicação.",
+      "pol.s26t": "Apoio ao cliente", "pol.s26b": "O utilizador pode contactar a equipa de apoio através dos canais indicados dentro da aplicação, ou escrevendo para ZynqOraAIsolver@gmail.com.",
       "pol.s27t": "Legislação aplicável", "pol.s27b": "Estas condições regem-se pela legislação aplicável de acordo com a residência do utilizador e a regulamentação de consumo em vigor."
     }
   });
@@ -2999,6 +3034,7 @@
       "bul.ai": "Zynqora AI — {n} mensajes al mes", "bul.files": "{n} archivos al mes",
       "bul.tests": "{n} tests al mes", "bul.fc": "{n} flashcards al mes",
       "bul.pod": "{n} podcasts al mes", "bul.pres": "{n} presentaciones IA al mes",
+      "bul.podFree": "1 podcast al mes", "bul.presFree": "1 presentación IA al mes",
       "bul.map": "{n} mapas conceptuales al mes",
       "bul.subj": "{n} materias", "bul.subjUnlim": "Materias sin límite razonable",
       "tools.podcastS": "Convierte tus apuntes en una explicación que puedes escuchar.",
@@ -3070,6 +3106,7 @@
       "bul.ai": "Zynqora AI — {n} messages/month", "bul.files": "{n} files/month",
       "bul.tests": "{n} tests/month", "bul.fc": "{n} flashcards/month",
       "bul.pod": "{n} podcasts/month", "bul.pres": "{n} AI presentations/month",
+      "bul.podFree": "1 podcast/month", "bul.presFree": "1 AI presentation/month",
       "bul.map": "{n} concept maps/month",
       "bul.subj": "{n} subjects", "bul.subjUnlim": "No reasonable subject limit",
       "tools.podcastS": "Turn your notes into an explanation you can listen to.",
@@ -3141,6 +3178,7 @@
       "bul.ai": "Zynqora AI — {n} messaggi al mese", "bul.files": "{n} file al mese",
       "bul.tests": "{n} test al mese", "bul.fc": "{n} flashcard al mese",
       "bul.pod": "{n} podcast al mese", "bul.pres": "{n} presentazioni IA al mese",
+      "bul.podFree": "1 podcast al mese", "bul.presFree": "1 presentazione IA al mese",
       "bul.map": "{n} mappe concettuali al mese",
       "bul.subj": "{n} materie", "bul.subjUnlim": "Materie senza limite ragionevole",
       "tools.podcastS": "Trasforma i tuoi appunti in una spiegazione che puoi ascoltare.",
@@ -3212,6 +3250,7 @@
       "bul.ai": "Zynqora AI — {n} messages/mois", "bul.files": "{n} fichiers/mois",
       "bul.tests": "{n} tests/mois", "bul.fc": "{n} flashcards/mois",
       "bul.pod": "{n} podcasts/mois", "bul.pres": "{n} présentations IA/mois",
+      "bul.podFree": "1 podcast/mois", "bul.presFree": "1 présentation IA/mois",
       "bul.map": "{n} cartes conceptuelles/mois",
       "bul.subj": "{n} matières", "bul.subjUnlim": "Pas de limite raisonnable de matières",
       "tools.podcastS": "Transforme tes notes en une explication que tu peux écouter.",
@@ -3283,6 +3322,7 @@
       "bul.ai": "Zynqora AI — {n} mensagens por mês", "bul.files": "{n} ficheiros por mês",
       "bul.tests": "{n} testes por mês", "bul.fc": "{n} flashcards por mês",
       "bul.pod": "{n} podcasts por mês", "bul.pres": "{n} apresentações de IA por mês",
+      "bul.podFree": "1 podcast por mês", "bul.presFree": "1 apresentação de IA por mês",
       "bul.map": "{n} mapas concetuais por mês",
       "bul.subj": "{n} disciplinas", "bul.subjUnlim": "Disciplinas sem limite razoável",
       "tools.podcastS": "Transforma os teus apontamentos numa explicação que podes ouvir.",
@@ -3362,8 +3402,8 @@
       "pod.apReview": "Repaso", "pod.apReviewS": "Rápido, antes del examen",
       "pod.apConv": "Conversación", "pod.apConvS": "Dos voces charlando",
       "pod.duration": "Duración", "pod.voice": "Voz", "pod.voiceStyle": "Estilo de voz",
-      "pod.voice1": "Voz 1", "pod.voice2": "Voz 2",
-      "pod.voice1S": "Cálida", "pod.voice2S": "Clara",
+      "pod.voiceMale": "Masculina", "pod.voiceFemale": "Femenina", "pod.voiceMixed": "Mixta",
+      "pod.voiceMaleS": "Tono grave y cercano", "pod.voiceFemaleS": "Tono claro y cercano", "pod.voiceMixedS": "Una voz de cada",
       "pod.vsNatural": "Natural", "pod.vsTeacher": "Profesor", "pod.vsPodcast": "Podcast", "pod.vsConv": "Conversación",
       "pod.generate": "Generar podcast",
       "pod.coverSub": "{approach} · {min} min",
@@ -3400,8 +3440,8 @@
       "pod.apReview": "Review", "pod.apReviewS": "Quick, before the exam",
       "pod.apConv": "Conversation", "pod.apConvS": "Two voices chatting",
       "pod.duration": "Length", "pod.voice": "Voice", "pod.voiceStyle": "Voice style",
-      "pod.voice1": "Voice 1", "pod.voice2": "Voice 2",
-      "pod.voice1S": "Warm", "pod.voice2S": "Clear",
+      "pod.voiceMale": "Male", "pod.voiceFemale": "Female", "pod.voiceMixed": "Mixed",
+      "pod.voiceMaleS": "Deep, warm tone", "pod.voiceFemaleS": "Clear, warm tone", "pod.voiceMixedS": "One voice each",
       "pod.vsNatural": "Natural", "pod.vsTeacher": "Teacher", "pod.vsPodcast": "Podcast", "pod.vsConv": "Conversation",
       "pod.generate": "Generate podcast",
       "pod.coverSub": "{approach} · {min} min",
@@ -3438,8 +3478,8 @@
       "pod.apReview": "Ripasso", "pod.apReviewS": "Veloce, prima dell'esame",
       "pod.apConv": "Conversazione", "pod.apConvS": "Due voci che chiacchierano",
       "pod.duration": "Durata", "pod.voice": "Voce", "pod.voiceStyle": "Stile di voce",
-      "pod.voice1": "Voce 1", "pod.voice2": "Voce 2",
-      "pod.voice1S": "Calda", "pod.voice2S": "Chiara",
+      "pod.voiceMale": "Maschile", "pod.voiceFemale": "Femminile", "pod.voiceMixed": "Mista",
+      "pod.voiceMaleS": "Tono grave e caldo", "pod.voiceFemaleS": "Tono chiaro e caldo", "pod.voiceMixedS": "Una voce ciascuno",
       "pod.vsNatural": "Naturale", "pod.vsTeacher": "Professore", "pod.vsPodcast": "Podcast", "pod.vsConv": "Conversazione",
       "pod.generate": "Genera podcast",
       "pod.coverSub": "{approach} · {min} min",
@@ -3476,8 +3516,8 @@
       "pod.apReview": "Révision", "pod.apReviewS": "Rapide, avant l'examen",
       "pod.apConv": "Conversation", "pod.apConvS": "Deux voix qui discutent",
       "pod.duration": "Durée", "pod.voice": "Voix", "pod.voiceStyle": "Style de voix",
-      "pod.voice1": "Voix 1", "pod.voice2": "Voix 2",
-      "pod.voice1S": "Chaleureuse", "pod.voice2S": "Claire",
+      "pod.voiceMale": "Masculine", "pod.voiceFemale": "Féminine", "pod.voiceMixed": "Mixte",
+      "pod.voiceMaleS": "Ton grave et chaleureux", "pod.voiceFemaleS": "Ton clair et chaleureux", "pod.voiceMixedS": "Une voix chacun",
       "pod.vsNatural": "Naturel", "pod.vsTeacher": "Professeur", "pod.vsPodcast": "Podcast", "pod.vsConv": "Conversation",
       "pod.generate": "Générer le podcast",
       "pod.coverSub": "{approach} · {min} min",
@@ -3514,8 +3554,8 @@
       "pod.apReview": "Revisão", "pod.apReviewS": "Rápida, antes do exame",
       "pod.apConv": "Conversa", "pod.apConvS": "Duas vozes a conversar",
       "pod.duration": "Duração", "pod.voice": "Voz", "pod.voiceStyle": "Estilo de voz",
-      "pod.voice1": "Voz 1", "pod.voice2": "Voz 2",
-      "pod.voice1S": "Calorosa", "pod.voice2S": "Clara",
+      "pod.voiceMale": "Masculina", "pod.voiceFemale": "Feminina", "pod.voiceMixed": "Mista",
+      "pod.voiceMaleS": "Tom grave e caloroso", "pod.voiceFemaleS": "Tom claro e caloroso", "pod.voiceMixedS": "Uma voz cada",
       "pod.vsNatural": "Natural", "pod.vsTeacher": "Professor", "pod.vsPodcast": "Podcast", "pod.vsConv": "Conversa",
       "pod.generate": "Gerar podcast",
       "pod.coverSub": "{approach} · {min} min",
@@ -4107,10 +4147,10 @@
   /* ================= PLANS + USAGE (simulated) ================= */
   var PLANS = {
     free: { key: "free", price: { m: 0, y: 0 },
-      limits: { aiMessages: 20, files: 3, tests: 5, flashcards: 20, podcasts: 0, presentations: 0, conceptMaps: 2, subjects: 3 }, pers: "basic" },
-    plus: { key: "plus", price: { m: 7.99, y: 79.99 }, popular: true,
+      limits: { aiMessages: 20, files: 3, tests: 5, flashcards: 20, podcasts: 1, presentations: 1, conceptMaps: 2, subjects: 3 }, pers: "basic" },
+    plus: { key: "plus", price: { m: 7.99, y: 59.99 }, popular: true,
       limits: { aiMessages: 300, files: 30, tests: 50, flashcards: 200, podcasts: 10, presentations: 5, conceptMaps: 20, subjects: 10 }, pers: "full" },
-    pro: { key: "pro", price: { m: 14.99, y: 149.99 },
+    pro: { key: "pro", price: { m: 14.99, y: 99.99 },
       limits: { aiMessages: 1000, files: 100, tests: 200, flashcards: 1000, podcasts: 30, presentations: 20, conceptMaps: 100, subjects: Infinity }, pers: "full" }
   };
   var PLAN_KEYS = ["free", "plus", "pro"];
@@ -4330,6 +4370,20 @@
         return c;
       });
     }
+    // proporción de bytes imprimibles (ASCII visible + espacio/tab/salto de línea).
+    // Un content-stream de PDF sin comprimir es SIEMPRE texto ASCII; una fuente
+    // incrustada, una imagen o un certificado de firma son binarios y darán un
+    // ratio bajo. Sirve para no confundir binario "con suerte" (que contenga la
+    // secuencia Tj/TJ por casualidad) con texto real.
+    function printableRatio(s) {
+      if (!s.length) return 0;
+      var printable = 0;
+      for (var i = 0; i < s.length; i++) {
+        var c = s.charCodeAt(i);
+        if (c === 9 || c === 10 || c === 13 || (c >= 32 && c < 127)) printable++;
+      }
+      return printable / s.length;
+    }
     function pdfOps(content) {
       var out = [];
       var toks = content.match(/\((?:\\[\s\S]|[^()\\])*\)|<[0-9A-Fa-f\s]+>|\bTd\b|\bTD\b|\bT\*\b|\bTJ\b|\bTj\b|\bBT\b|\bET\b/g) || [];
@@ -4359,18 +4413,32 @@
           return tryList[0]
             .catch(function () { return tryList[1]; })
             .then(function (u) { return new TextDecoder("latin1").decode(u); })
-            .catch(function () { return (/\b(Tj|TJ|BT)\b/.test(raw) ? raw : ""); })
+            // si no se pudo descomprimir, solo aceptamos el stream "tal cual" cuando
+            // es realmente texto plano (>=92% bytes imprimibles) — si no, es binario
+            // (fuente, imagen, certificado…) y NO debe tratarse como contenido de texto
+            .catch(function () { return (printableRatio(raw) >= 0.92 && /\b(Tj|TJ|BT)\b/.test(raw)) ? raw : ""; })
             .then(function (content) {
-              if (content && /\b(Tj|TJ|BT)\b/.test(content)) acc.push(pdfOps(content));
+              if (content && printableRatio(content) >= 0.85 && /\b(Tj|TJ|BT)\b/.test(content)) acc.push(pdfOps(content));
               return acc;
             });
         });
       }, Promise.resolve([])).then(function (parts) {
         var txt = parts.join("\n")
+          // por si quedara algún carácter de control colado (defensa extra, además
+          // del filtro por stream de más arriba)
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
           .replace(/[ \t]{2,}/g, " ")
           .replace(/\n{3,}/g, "\n\n")
           .replace(/(\w)-\n(\w)/g, "$1$2")
           .replace(/\n(?=[a-záéíóúñ,;])/g, " ")
+          .split("\n")
+          // descarta líneas que sigan pareciendo ruido binario (muy pocas letras/espacios reales)
+          .filter(function (line) {
+            var t = line.trim(); if (!t) return true;
+            var word = (t.match(/[a-zA-Z0-9À-ÿ\s.,;:!?()'"«»%-]/g) || []).length;
+            return word / t.length >= 0.6;
+          })
+          .join("\n")
           .trim();
         return txt;
       });
@@ -6433,9 +6501,9 @@
     function bul(k, n) { return t("bul." + k, n != null ? { n: n } : null); }
     var LM = { free: PLANS.free.limits, plus: PLANS.plus.limits, pro: PLANS.pro.limits };
     var BULLETS = {
-      free: [bul("calendar"), bul("ai", LM.free.aiMessages), bul("files", LM.free.files), bul("tests", LM.free.tests), bul("fc", LM.free.flashcards), bul("subj", LM.free.subjects), bul("streak"), t("plans.reviewFree"), bul("colorsBasic"), bul("langs"), bul("noAds")],
+      free: [bul("calendar"), bul("ai", LM.free.aiMessages), bul("files", LM.free.files), bul("tests", LM.free.tests), bul("fc", LM.free.flashcards), bul("podFree"), bul("presFree"), bul("subj", LM.free.subjects), bul("streak"), t("plans.reviewFree"), bul("colorsBasic"), bul("langs"), bul("noAds")],
       plus: [bul("allFree"), bul("ai", LM.plus.aiMessages), bul("files", LM.plus.files), bul("tests", LM.plus.tests), bul("fc", LM.plus.flashcards), bul("pod", LM.plus.podcasts), bul("pres", LM.plus.presentations), bul("map", LM.plus.conceptMaps), bul("subj", LM.plus.subjects), bul("persFull"), bul("noAds")],
-      pro: [bul("allPlus"), bul("ai", LM.pro.aiMessages), bul("files", LM.pro.files), bul("tests", LM.pro.tests), bul("fc", LM.pro.flashcards), bul("pod", LM.pro.podcasts), bul("pres", LM.pro.presentations), bul("map", LM.pro.conceptMaps), bul("subjUnlim"), bul("aiAdvanced"), bul("persFull"), bul("noAds")]
+      pro: [bul("allPlus"), bul("ai", LM.pro.aiMessages), bul("files", LM.pro.files), bul("tests", LM.pro.tests), bul("fc", LM.pro.flashcards), bul("pod", LM.pro.podcasts), bul("pres", LM.pro.presentations), bul("map", LM.pro.conceptMaps), bul("subjUnlim"), bul("persFull"), bul("noAds")]
     };
     var body = topbar(t("plans.title"), { back: "profile", noAi: true }) +
       '<div class="wrap wide" style="max-width:1000px">' +
@@ -6544,7 +6612,8 @@
   };
   var POD_DUR = { short: 300, medium: 600, deep: 1200 };
   var POD_APPROACH = [["pod.apExplain", "pod.apExplainS", "🎙️"], ["pod.apReview", "pod.apReviewS", "🔄"], ["pod.apConv", "pod.apConvS", "💬"]];
-  var POD_VOICES = [["pod.voice1", "pod.voice1S", "🗣️"], ["pod.voice2", "pod.voice2S", "🎧"]];
+  var POD_VOICES = [["pod.voiceMale", "pod.voiceMaleS", "🙋‍♂️"], ["pod.voiceFemale", "pod.voiceFemaleS", "🙋‍♀️"], ["pod.voiceMixed", "pod.voiceMixedS", "🗣️"]];
+  var POD_VOICE_MODES = ["male", "female", "mixed"];
   var POD_VSTYLES = ["pod.vsNatural", "pod.vsTeacher", "pod.vsPodcast", "pod.vsConv"];
   var PRES_STYLES = ["pres.st0", "pres.st1", "pres.st2", "pres.st3", "pres.st4"];
   var MAP_STYLES = ["tf.mapRadial", "tf.mapHier"];
@@ -6631,12 +6700,14 @@
   function toolOptions(m) {
     if (m === "podcast") {
       var ap = S.podApproach || 0, du = S.podDur || "medium", vo = S.podVoiceIdx || 0, vs = S.podVStyleIdx || 0;
+      var twoV = ap === 2;
+      var voiceOpts = twoV ? POD_VOICES : POD_VOICES.slice(0, 2);
       return '<div class="card"><div class="eyebrow">' + t("pod.approach") + '</div><div class="cfg-cards">' +
           POD_APPROACH.map(function (a, i) { return '<button class="cfg-card ' + (ap === i ? "on" : "") + '" data-action="pod-approach" data-n="' + i + '"><span class="cf-e">' + a[2] + '</span><b>' + t(a[0]) + "</b><span>" + t(a[1]) + "</span></button>"; }).join("") + "</div></div>" +
         '<div class="card" style="margin-top:12px"><div class="eyebrow">' + t("pod.duration") + '</div><div class="cfg-cards">' +
           ["short", "medium", "deep"].map(function (dk) { return '<button class="cfg-card ' + (du === dk ? "on" : "") + '" data-action="pod-dur" data-v="' + dk + '"><b>' + t("tf.min", { n: POD_DUR[dk] / 60 }) + "</b><span>" + t("tf.dur" + dk.charAt(0).toUpperCase() + dk.slice(1)) + "</span></button>"; }).join("") + "</div></div>" +
-        '<div class="card" style="margin-top:12px"><div class="eyebrow">' + t("pod.voice") + '</div><div class="cfg-cards cfg-2">' +
-          POD_VOICES.map(function (v, i) { return '<button class="cfg-card ' + (vo === i ? "on" : "") + '" data-action="pod-voice" data-n="' + i + '"><span class="cf-e">' + v[2] + '</span><b>' + t(v[0]) + "</b><span>" + t(v[1]) + "</span></button>"; }).join("") + "</div>" +
+        '<div class="card" style="margin-top:12px"><div class="eyebrow">' + t("pod.voice") + '</div><div class="cfg-cards ' + (twoV ? "" : "cfg-2") + '">' +
+          voiceOpts.map(function (v, i) { return '<button class="cfg-card ' + (vo === i ? "on" : "") + '" data-action="pod-voice" data-n="' + i + '"><span class="cf-e">' + v[2] + '</span><b>' + t(v[0]) + "</b><span>" + t(v[1]) + "</span></button>"; }).join("") + "</div>" +
           '<div class="eyebrow" style="margin-top:14px">' + t("pod.voiceStyle") + '</div><div class="chip-row" style="margin-top:10px">' +
           POD_VSTYLES.map(function (st, i) { return '<button class="chip-sel ' + (vs === i ? "on" : "") + '" data-action="pod-vstyle" data-n="' + i + '">' + t(st) + "</button>"; }).join("") + "</div></div>";
     }
@@ -6668,27 +6739,42 @@
     slides.push({ type: "closing", kicker: t("pres.tClose"), title: title, sub: t("pres.closeSub"), list: main.slice(0, 4), heroFaint: 1 });
     return slides;
   }
-  function slideHtml(sl, s) {
+  function slideHtml(sl, s, idx, total) {
     var heroCls = sl.hero ? "ps-hero" : (sl.heroFaint ? "ps-hero faint" : "");
     var hero = heroCls ? '<div class="' + heroCls + '">' + (HERO[s.id] || HERO._) + "</div>" : "";
-    var title = sl.type === "highlight"
-      ? '<div class="ps-title"><span class="hl-big">' + sl.big + "</span>" + sl.title + "</div>"
-      : '<div class="ps-title">' + sl.title + "</div>";
-    var sub = (sl.sub && sl.type !== "highlight") ? '<div class="ps-sub">' + sl.sub + "</div>" : "";
-    var body = "";
-    if (sl.type === "timeline") {
+    var kicker = '<div class="ps-kicker"><i class="ps-kdot"></i>' + sl.kicker + "</div>";
+    var title = '<div class="ps-title">' + sl.title + "</div>";
+    var sub = "", body = "";
+    if (sl.type === "highlight") {
+      body = '<div class="ps-hl"><div class="hl-ring"><span>' + sl.big + "</span></div><div class=\"ps-list hl-list\">" +
+        (sl.list || []).map(function (x) { return '<div class="pli"><span class="pli-i pli-ok">' + icon("check", 13) + "</span><span>" + x + "</span></div>"; }).join("") +
+      "</div></div>";
+    } else if (sl.type === "definition") {
+      body = '<div class="ps-quote"><i class="ps-qmark">&ldquo;</i><p>' + (sl.sub || "") + "</p></div>";
+    } else if (sl.type === "timeline") {
       body = '<div class="pres-tl">' + sl.tl.map(function (r, i) {
         return '<div class="ptl"><div class="ptl-rail"><span class="ptl-y"><b>' + r.y + "</b></span>" + (i < sl.tl.length - 1 ? '<span class="ptl-line"></span>' : "") + '</div><div class="ptl-t">' + r.t + "</div></div>";
       }).join("") + "</div>";
     } else if (sl.type === "compare") {
-      body = '<div class="pres-cmp">' + sl.cmp.map(function (c) { return '<div class="pcm">' + (c.h ? "<h4>" + c.h + "</h4>" : "") + (c.p ? "<p>" + c.p + "</p>" : "") + "</div>"; }).join("") + "</div>";
+      body = '<div class="pres-cmp">' + sl.cmp.map(function (c, i) {
+        return '<div class="pcm"><i class="pcm-badge"><b>' + (i === 0 ? "A" : "B") + "</b></i>" + (c.h ? "<h4>" + c.h + "</h4>" : "") + (c.p ? "<p>" + c.p + "</p>" : "") + "</div>";
+      }).join("") + "</div>";
     } else if (sl.list && sl.list.length) {
-      body = '<div class="ps-list">' + sl.list.map(function (x) { return '<div class="pli"><span class="pli-i">' + icon(conceptIcon(x, s), 15) + "</span><span>" + x + "</span></div>"; }).join("") + "</div>";
+      body = '<div class="ps-list">' + sl.list.map(function (x, i) {
+        return '<div class="pli"><i class="pli-n">' + (i + 1) + '</i><span class="pli-i">' + icon(conceptIcon(x, s), 15) + "</span><span>" + x + "</span></div>";
+      }).join("") + "</div>";
     }
-    return hero + '<div class="ps-kicker">' + sl.kicker + "</div>" + title + sub + '<div class="ps-body">' + body + "</div>";
+    if (sl.sub && sl.type !== "highlight" && sl.type !== "definition") {
+      sub = sl.type === "title"
+        ? '<div class="ps-tags">' + String(sl.sub).split(" · ").map(function (x) { return "<span class=\"ps-tag\">" + x + "</span>"; }).join("") + "</div>"
+        : '<div class="ps-sub">' + sl.sub + "</div>";
+    }
+    var foot = '<div class="ps-foot"><span class="ps-brand">' + icon("spark", 11) + "Zynqora</span>" +
+      (total ? '<span class="ps-pageno">' + (idx + 1) + " / " + total + "</span>" : "") + "</div>";
+    return '<div class="ps-bg"></div>' + hero + kicker + title + sub + '<div class="ps-body">' + body + "</div>" + foot;
   }
   function stageHtml(deck, idx, st, s) {
-    return '<div class="pres-stage"><div class="pres-slide anim" data-st="' + st + '" data-type="' + deck[idx].type + '">' + slideHtml(deck[idx], s) + "</div></div>";
+    return '<div class="pres-stage"><div class="pres-slide anim" data-st="' + st + '" data-type="' + deck[idx].type + '">' + slideHtml(deck[idx], s, idx, deck.length) + "</div></div>";
   }
   function presResult(s) {
     var deck = curDeck(s);
@@ -7578,25 +7664,82 @@
     } catch (e) {}
   }
   function speechAvailable() { return SPEECH.ok; }
-  function pickStyleVoice(lang, which) {
+  /* ---- selección de voz por género (heurística por nombre: la Web Speech API
+     no expone un campo de género fiable entre navegadores) ---- */
+  var VOICE_NAME_GENDER = {
+    female: ["female", "fem", "mujer", "femme", "femmina", "feminin",
+      "elvira", "lucia", "lucía", "conchita", "monica", "mónica", "paloma", "paulina", "helena", "laura",
+      "sabina", "raquel", "esperanza", "marisol", "camila", "valentina", "carmen", "isabela", "ines", "inés",
+      "sofia", "sofía", "penelope", "penélope", "mia",
+      "samantha", "karen", "fiona", "moira", "tessa", "victoria", "susan", "zira", "salli", "joanna",
+      "kimberly", "ivy", "kendra", "aria", "jenny", "michelle", "amy", "emma", "olivia", "ana",
+      "amelie", "amélie", "julie", "celine", "céline", "charlotte", "chloe", "chloé", "léa", "lea",
+      "denise", "hortense", "eloise", "élodie", "audrey", "marion",
+      "alice", "elsa", "bianca", "francesca", "giulia", "elena", "chiara", "paola", "vittoria",
+      "joana", "fernanda", "francisca", "luciana", "catarina", "ines-pt"],
+    male: ["male", "masc", "hombre", "homme", "uomo", "mann",
+      "alvaro", "álvaro", "jorge", "diego", "enrique", "pablo", "carlos", "juan", "miguel", "raul", "raúl",
+      "sergio", "fernando", "andres", "andrés", "reynaldo", "roberto",
+      "daniel", "david", "alex", "mark", "james", "ryan", "guy", "brian", "eric", "christopher",
+      "matthew", "justin", "tony", "aaron", "fred", "gordon", "liam", "oliver", "eddy",
+      "thomas", "nicolas", "nicolás", "antoine", "henri", "paul", "claude", "guillaume", "mathieu",
+      "luca", "marco", "paolo", "giorgio", "francesco", "niccolo", "niccolò", "diego-it",
+      "felipe", "thiago", "duarte"]
+  };
+  function guessVoiceGender(v) {
+    if (!v || !v.name) return null;
+    var n = v.name.toLowerCase();
+    if (/\bfemale\b|\bfem(enin[oa])?\b|\bmujer\b/.test(n)) return "f";
+    if (/\bmale\b|\bmasculin[oa]?\b|\bhombre\b/.test(n) && !/female/.test(n)) return "m";
+    var i;
+    for (i = 0; i < VOICE_NAME_GENDER.female.length; i++) if (n.indexOf(VOICE_NAME_GENDER.female[i]) !== -1) return "f";
+    for (i = 0; i < VOICE_NAME_GENDER.male.length; i++) if (n.indexOf(VOICE_NAME_GENDER.male[i]) !== -1) return "m";
+    return null;
+  }
+  function speechLangPool(lang) {
     var code = (lang || "es").slice(0, 2).toLowerCase();
     var vs = SPEECH.voices.filter(function (v) { return v.lang && v.lang.toLowerCase().indexOf(code) === 0; });
-    if (!vs.length) vs = SPEECH.voices;
-    if (!vs.length) return null;
-    var nice = vs.filter(function (v) { return /natural|neural|online|enhanced|premium|google/i.test(v.name) && !/compact/i.test(v.name); });
-    var pool = nice.length ? nice : vs;
-    if (which === "B") { var alt = pool.filter(function (v) { return v !== pool[0]; }); return alt[0] || vs[1] || pool[0]; }
-    return pool[0];
+    return vs.length ? vs : SPEECH.voices;
   }
-  function styleParams(styleKey, speaker) {
+  function speechNicePool(vs) {
+    var nice = vs.filter(function (v) { return /natural|neural|online|enhanced|premium|google/i.test(v.name) && !/compact/i.test(v.name); });
+    return nice.length ? nice : vs;
+  }
+  function distinctVoice(list, exclude) { var alt = list.filter(function (v) { return v !== exclude; }); return alt[0] || list[0] || null; }
+  /* narrador único: "male" o "female" (mejor esfuerzo — si el dispositivo no
+     tiene ninguna voz identificable de ese género, cae a la mejor disponible) */
+  function pickSoloVoice(lang, gender) {
+    var vs = speechLangPool(lang); if (!vs.length) return null;
+    var pool = speechNicePool(vs);
+    var g = pool.filter(function (v) { return guessVoiceGender(v) === (gender === "female" ? "f" : "m"); });
+    if (!g.length) g = vs.filter(function (v) { return guessVoiceGender(v) === (gender === "female" ? "f" : "m"); });
+    return g[0] || pool[0] || vs[0] || null;
+  }
+  /* diálogo a dos voces: "male" (dos voces masculinas distintas), "female"
+     (dos femeninas) o "mixed" (una de cada, si el dispositivo las tiene) */
+  function pickDialogueVoices(lang, mode) {
+    var vs = speechLangPool(lang); if (!vs.length) return [null, null];
+    var pool = speechNicePool(vs);
+    var fem = pool.filter(function (v) { return guessVoiceGender(v) === "f"; });
+    var masc = pool.filter(function (v) { return guessVoiceGender(v) === "m"; });
+    if (!fem.length) fem = vs.filter(function (v) { return guessVoiceGender(v) === "f"; });
+    if (!masc.length) masc = vs.filter(function (v) { return guessVoiceGender(v) === "m"; });
+    if (mode === "mixed" && fem.length && masc.length) return [fem[0], masc[0]];
+    if (mode === "female" && fem.length) return [fem[0], fem.length > 1 ? distinctVoice(fem, fem[0]) : distinctVoice(pool, fem[0])];
+    if (mode === "male" && masc.length) return [masc[0], masc.length > 1 ? distinctVoice(masc, masc[0]) : distinctVoice(pool, masc[0])];
+    // el dispositivo no distingue género de forma fiable: al menos usamos dos voces distintas
+    var a = pool[0] || vs[0];
+    return [a, distinctVoice(pool.length > 1 ? pool : vs, a)];
+  }
+  function styleParams(styleKey, speaker, pitchBoostB) {
     var p = { rate: 1, pitch: 1 };
     if (styleKey === "teacher") p = { rate: 0.97, pitch: 1.0 };
     else if (styleKey === "podcast") p = { rate: 1.06, pitch: 1.05 };
     else if (styleKey === "conv") p = { rate: 1.03, pitch: 1.02 };
-    if (speaker === "B") p.pitch += 0.12;
+    if (speaker === "B" && pitchBoostB) p.pitch += 0.12;
     return p;
   }
-  function buildSpeechQueue(script, fromSeg) {
+  function buildSpeechQueue(script, fromSeg, pitchBoostB) {
     var q = [], styleKey = POD_VSTYLE_KEYS[S.podVStyleIdx || 0];
     for (var i = fromSeg; i < script.segments.length; i++) {
       var seg = script.segments[i];
@@ -7604,7 +7747,7 @@
       var parts = txt.match(/[^.!?…]+[.!?…]*/g) || [txt];
       parts.forEach(function (p) {
         p = p.trim(); if (!p) return;
-        var sp = styleParams(styleKey, script.two ? seg.speaker : "A");
+        var sp = styleParams(styleKey, script.two ? seg.speaker : "A", pitchBoostB);
         var emph = /\b(mil\b|por ciento|es igual|recuerda|important|clave|nunca|siempre|la respuesta|conclusi|no olvides|fíjate)/i.test(p);
         q.push({ segIdx: i, text: p, speaker: seg.speaker, t: seg.t,
           rate: sp.rate * (emph ? 0.93 : 1) * (1 + (Math.random() * 0.05 - 0.025)),
@@ -7623,10 +7766,21 @@
     if (!SPEECH.ok || !SPEECH.script) return;
     speechStop();
     var script = SPEECH.script, lang = DB.lang === "en" ? "en-US" : "es-ES";
-    SPEECH.queue = buildSpeechQueue(script, Math.max(0, Math.min(fromSeg, script.segments.length - 1)));
+    var voiceMode = POD_VOICE_MODES[S.podVoiceIdx || 0] || "male";
+    var vA, vB;
+    if (script.two) {
+      var pair = pickDialogueVoices(lang, voiceMode);
+      vA = pair[0]; vB = pair[1];
+    } else {
+      vA = pickSoloVoice(lang, voiceMode === "female" ? "female" : "male");
+      vB = vA;
+    }
+    // si no se pudieron distinguir dos voces reales (dispositivo con pocas voces
+    // instaladas), recurrimos al pequeño desfase de tono de antes para que se noten como distintas
+    var pitchBoostB = script.two && (!vB || vA === vB);
+    SPEECH.queue = buildSpeechQueue(script, Math.max(0, Math.min(fromSeg, script.segments.length - 1)), pitchBoostB);
     SPEECH.qi = 0; SPEECH.segIdx = -1;
     SPEECH.playing = true; S.podPlaying = 1;
-    var vA = pickStyleVoice(lang, "A"), vB = pickStyleVoice(lang, "B");
     var vol = S.podVol == null ? 0.9 : S.podVol;
     bgmStart();
     function next() {
@@ -7703,7 +7857,7 @@
     var title = (sc.title || (tdoc ? L(tdoc.title) : L(s.doc.title))).replace(/\.(pdf|PDF|txt|docx|md)$/i, "");
     var subjId = HERO[s.id] ? s.id : "_";
     var approach = t(POD_APPROACH[S.podApproach || 0][0]);
-    var voice = sc.two ? t("pod.twoVoices") : t(POD_VOICES[S.podVoiceIdx || 0][0]);
+    var voice = sc.two ? (t("pod.twoVoices") + " · " + t(POD_VOICES[S.podVoiceIdx || 0][0])) : t(POD_VOICES[S.podVoiceIdx || 0][0]);
     var vstyle = t(POD_VSTYLES[S.podVStyleIdx || 0]);
     var speeds = [0.75, 1, 1.25, 1.5, 2];
     var vol = S.podVol == null ? 0.9 : S.podVol;
@@ -9244,7 +9398,7 @@
         else S.mapStyleIdx = parseInt(d.n, 10);
         render(true); break;
       case "pod-dur": S.podDur = d.v; render(true); break;
-      case "pod-approach": S.podApproach = parseInt(d.n, 10); render(true); break;
+      case "pod-approach": S.podApproach = parseInt(d.n, 10); if (S.podApproach !== 2 && S.podVoiceIdx === 2) S.podVoiceIdx = 0; render(true); break;
       case "pod-voice": S.podVoiceIdx = parseInt(d.n, 10); render(true); break;
       case "pod-vstyle": S.podVStyleIdx = parseInt(d.n, 10); render(true); break;
       case "tool-generate": if (busy("gen")) break; toolGenerate(); break;
